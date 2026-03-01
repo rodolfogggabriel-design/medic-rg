@@ -28,7 +28,7 @@ app = Flask(__name__)
 # =============================================
 # CONFIGURAÇÕES
 # =============================================
-KNOWLEDGE_BASE_PATH = "os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'knowledge_base.json')"
+KNOWLEDGE_BASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'knowledge_base.json')
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 TOP_K = 2
 MAX_HISTORY = 10
@@ -225,7 +225,7 @@ def providers():
 # =============================================
 # INIT
 # =============================================
-if __name__ == "__main__":
+load_knowledge_base()
     print("=" * 60)
     print("  🏥 MedicQA v2 — Multi-API Free Tier Rotation")
     print("=" * 60)
