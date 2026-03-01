@@ -236,3 +236,4 @@ load_knowledge_base()
     print(f"   Ctrl+C para parar\n")
 
     app.run(host="0.0.0.0", port=5000, debug=True)
+
