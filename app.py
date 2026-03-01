@@ -28,7 +28,7 @@ app = Flask(__name__)
 # =============================================
 # CONFIGURAÇÕES
 # =============================================
-KNOWLEDGE_BASE_PATH = "data/knowledge_base.json"
+KNOWLEDGE_BASE_PATH = "os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'knowledge_base.json')"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 TOP_K = 2
 MAX_HISTORY = 10
@@ -166,8 +166,8 @@ def ask():
     context_parts = []
     for i, chunk in enumerate(results, 1):
         context_parts.append(f"[Trecho {i} - {chunk['book']}, p.{chunk['page']}]\n{chunk['text']}")
-    context = "\n\n---\n\n".join(context_parts)
-    system_prompt = SYSTEM_PROMPT + context
+    context = "\n\n---\n\n".join(context_parts)[:4000]
+    system_prompt = SYSTEM_PROMPT + context[:1500]
 
     # 4. Mensagens
     messages = []
