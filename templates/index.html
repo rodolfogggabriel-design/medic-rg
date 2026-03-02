@@ -2,762 +2,917 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Auto-Shorts • Studio</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#060b14">
+<title>MEDIC.RG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-:root {
-  --bg-deep: #080b12; --bg-base: #0c1019; --bg-card: #111722;
-  --bg-card-hover: #161d2b; --bg-input: #0e1420;
-  --border: rgba(255,255,255,0.06); --border-hover: rgba(255,255,255,0.12);
-  --text: #e2e8f0; --text-dim: #7a8599; --text-muted: #4a5568;
-  --cyan: #22d3ee; --cyan-dim: rgba(34,211,238,0.1);
-  --blue: #3b82f6; --red: #ef4444; --red-dim: rgba(239,68,68,0.1);
-  --purple: #a855f7; --amber: #f59e0b;
-  --green: #10b981; --green-dim: rgba(16,185,129,0.1);
-  --font: 'Outfit', sans-serif; --mono: 'JetBrains Mono', monospace;
-  --radius: 10px;
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+--bg:#060b14;--surface:#0d1520;--card:#111a2b;--border:#1a2740;
+--text:#e2e8f0;--text-dim:#7a8ba0;--accent:#00e5c8;--accent2:#00b4d8;
+--pink:#ff6b9d;--purple:#a78bfa;--blue:#60a5fa;--amber:#fbbf24;
+--green:#34d399;--red:#f87171;
+--radius:16px;--glass:rgba(17,26,43,0.7);
 }
-html, body { height:100%; overflow:hidden; }
-body { font-family:var(--font); background:var(--bg-deep); color:var(--text); display:flex; }
-::-webkit-scrollbar { width:5px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:3px; }
+html,body{height:100%;overflow:hidden}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);touch-action:manipulation}
 
-.sidebar {
-  width:220px; min-width:220px; background:var(--bg-base);
-  border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:10;
-}
-.logo { padding:20px 16px; display:flex; align-items:center; gap:10px; }
-.logo-icon {
-  width:36px; height:36px; border-radius:10px;
-  background:linear-gradient(135deg, var(--cyan), var(--blue));
-  display:flex; align-items:center; justify-content:center;
-  font-size:15px; font-weight:800; color:white;
-}
-.logo-text { font-size:14px; font-weight:700; }
-.logo-sub { font-size:10px; color:var(--text-dim); }
+/* ===== BACKGROUND ===== */
+.bg-orbs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.15;animation:orbFloat 20s ease-in-out infinite}
+.orb-1{width:400px;height:400px;background:radial-gradient(circle,#00e5c8,transparent);top:-100px;left:-100px;animation-delay:0s}
+.orb-2{width:350px;height:350px;background:radial-gradient(circle,#a78bfa,transparent);bottom:-80px;right:-80px;animation-delay:-7s}
+.orb-3{width:300px;height:300px;background:radial-gradient(circle,#00b4d8,transparent);top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:-14s}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-40px) scale(1.1)}66%{transform:translate(-20px,30px) scale(.9)}}
 
-.nav { flex:1; padding:8px; display:flex; flex-direction:column; gap:2px; }
-.nav-item {
-  padding:10px 12px; border-radius:8px; cursor:pointer;
-  display:flex; align-items:center; gap:10px;
-  font-size:13px; font-weight:500; color:var(--text-dim); transition:all .15s;
-}
-.nav-item:hover { background:var(--bg-card); color:var(--text); }
-.nav-item.active { background:var(--cyan-dim); color:var(--cyan); }
-.nav-item svg { width:18px; height:18px; opacity:0.7; }
-.nav-item.active svg { opacity:1; }
-.nav-sep { height:1px; background:var(--border); margin:8px 4px; }
-.sidebar-status { padding:12px 16px; border-top:1px solid var(--border); font-size:11px; color:var(--text-muted); }
-.status-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; }
-.status-dot.on { background:var(--green); box-shadow:0 0 8px rgba(16,185,129,0.4); }
-.status-dot.off { background:var(--text-muted); }
+/* ===== LAYOUT ===== */
+.app{position:relative;z-index:1;display:flex;flex-direction:column;height:100dvh;max-width:900px;margin:0 auto}
 
-.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.topbar { padding:16px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-.topbar h1 { font-size:18px; font-weight:700; }
-.topbar-actions { display:flex; gap:8px; }
-.content { flex:1; overflow-y:auto; padding:24px; }
-.page { display:none; } .page.active { display:block; }
+/* ===== HEADER ===== */
+.header{padding:16px 20px 0;text-align:center;flex-shrink:0}
+.logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 20px rgba(0,229,200,.3)}
+.logo-text{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
-.card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:16px; }
-.card-title { font-size:14px; font-weight:600; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+/* ===== TABS ===== */
+.tabs{display:flex;gap:4px;padding:12px 20px;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:8px 18px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab:hover{border-color:var(--accent);color:var(--text)}
+.tab.active{background:linear-gradient(135deg,rgba(0,229,200,.15),rgba(0,180,216,.1));border-color:var(--accent);color:var(--accent)}
+.tab-icon{margin-right:6px}
 
-.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.form-grid.cols-3 { grid-template-columns:1fr 1fr 1fr; }
-.form-group { display:flex; flex-direction:column; gap:4px; }
-.form-group.full { grid-column:1/-1; }
-label { font-size:12px; color:var(--text-dim); font-weight:500; }
-input, select, textarea {
-  background:var(--bg-input); border:1px solid var(--border);
-  border-radius:8px; padding:9px 12px; color:var(--text);
-  font-family:var(--font); font-size:13px; outline:none; transition:border .15s;
-}
-input:focus, select:focus { border-color:var(--cyan); }
-input[type=range] { padding:0; background:none; border:none; height:24px; }
-input[type=color] { padding:2px; height:36px; width:60px; cursor:pointer; }
-select { cursor:pointer; }
+/* ===== PANELS ===== */
+.panel{flex:1;overflow-y:auto;display:none;flex-direction:column}
+.panel.active{display:flex}
+.panel::-webkit-scrollbar{width:4px}
+.panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 
-.range-row { display:flex; align-items:center; gap:10px; }
-.range-row input[type=range] { flex:1; }
-.range-val { font-family:var(--mono); font-size:12px; color:var(--cyan); min-width:40px; text-align:right; }
-.color-row { display:flex; align-items:center; gap:8px; }
+/* ===== CHAT PANEL ===== */
+.messages{flex:1;overflow-y:auto;padding:8px 20px 12px;display:flex;flex-direction:column;gap:12px}
+.messages::-webkit-scrollbar{width:4px}
+.messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 
-.btn {
-  display:inline-flex; align-items:center; gap:6px;
-  padding:9px 16px; border-radius:8px; border:none;
-  font-family:var(--font); font-size:13px; font-weight:600; cursor:pointer; transition:all .15s;
-}
-.btn-primary { background:var(--cyan); color:#080b12; }
-.btn-primary:hover { filter:brightness(1.1); transform:translateY(-1px); }
-.btn-secondary { background:var(--bg-card-hover); color:var(--text); border:1px solid var(--border); }
-.btn-secondary:hover { border-color:var(--border-hover); }
-.btn-danger { background:var(--red-dim); color:var(--red); }
-.btn-sm { padding:6px 12px; font-size:12px; }
+.welcome{text-align:center;padding:40px 0}
+.welcome h2{font-family:'Playfair Display',serif;font-size:22px;margin-bottom:8px;color:var(--text)}
+.welcome p{color:var(--text-dim);font-size:14px;margin-bottom:20px}
+.suggestions{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:500px;margin:0 auto}
+.suggestion{padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--glass);color:var(--text-dim);font-size:12px;cursor:pointer;text-align:left;transition:all .2s;backdrop-filter:blur(10px)}
+.suggestion:hover{border-color:var(--accent);color:var(--text);transform:translateY(-1px)}
 
-.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
-.stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
-.stat-label { font-size:11px; color:var(--text-dim); margin-bottom:4px; }
-.stat-value { font-size:22px; font-weight:700; }
-.stat-value.cyan { color:var(--cyan); } .stat-value.green { color:var(--green); }
-.stat-value.amber { color:var(--amber); } .stat-value.purple { color:var(--purple); }
+.msg{animation:msgIn .3s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.msg-user{align-self:flex-end;max-width:80%;padding:12px 16px;border-radius:16px 16px 4px 16px;background:linear-gradient(135deg,rgba(0,229,200,.15),rgba(0,180,216,.1));border:1px solid rgba(0,229,200,.2);font-size:14px}
+.msg-ai{align-self:flex-start;max-width:90%;padding:16px;border-radius:4px 16px 16px 16px;background:var(--card);border:1px solid var(--border);font-size:14px;line-height:1.7}
+.msg-ai p{margin-bottom:8px}
+.msg-ai p:last-child{margin-bottom:0}
 
-.terminal {
-  background:#0a0e14; border:1px solid var(--border); border-radius:var(--radius);
-  font-family:var(--mono); font-size:12px; line-height:1.6; overflow-y:auto;
-  max-height:500px; padding:16px;
-}
-.terminal .log-time { color:var(--text-muted); margin-right:8px; }
-.terminal .log-error { color:var(--red); } .terminal .log-success { color:var(--green); }
-.terminal .log-info { color:var(--cyan); } .terminal .log-log { color:var(--text-dim); }
+.msg-actions{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap;align-items:center}
+.msg-btn{padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:11px;cursor:pointer;transition:all .2s;font-family:'Outfit',sans-serif}
+.msg-btn:hover{border-color:var(--accent);color:var(--accent)}
+.msg-btn.active{background:rgba(0,229,200,.1);border-color:var(--accent);color:var(--accent)}
 
-.steps { display:flex; gap:4px; margin-bottom:16px; }
-.step { flex:1; height:6px; border-radius:3px; background:var(--bg-input); transition:background .3s; }
-.step.done { background:var(--green); }
-.step.active { background:var(--cyan); animation:pulse 1.5s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.source-pill{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;margin:2px;border:1px solid}
+.source-guyton{border-color:rgba(255,107,157,.3);color:var(--pink);background:rgba(255,107,157,.08)}
+.source-silverthorn{border-color:rgba(167,139,250,.3);color:var(--purple);background:rgba(167,139,250,.08)}
+.source-porto{border-color:rgba(96,165,250,.3);color:var(--blue);background:rgba(96,165,250,.08)}
+.source-default{border-color:rgba(0,229,200,.3);color:var(--accent);background:rgba(0,229,200,.08)}
 
-.tabs { display:flex; gap:4px; margin-bottom:16px; }
-.tab {
-  padding:7px 14px; border-radius:6px; cursor:pointer;
-  font-size:12px; font-weight:500; color:var(--text-dim);
-  background:var(--bg-input); border:1px solid transparent; transition:all .15s;
-}
-.tab:hover { color:var(--text); } .tab.active { background:var(--cyan-dim); color:var(--cyan); }
-.tab-content { display:none; } .tab-content.active { display:block; }
+.provider-tag{font-size:10px;color:var(--text-dim);margin-left:auto}
 
-.sub-preview-text { font-weight:700; text-transform:uppercase; }
+.typing{display:flex;gap:4px;padding:16px;align-self:flex-start}
+.typing span{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:typingBounce .6s ease-in-out infinite}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes typingBounce{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 
-.toast {
-  position:fixed; bottom:24px; right:24px; background:var(--bg-card); border:1px solid var(--border);
-  border-radius:var(--radius); padding:12px 20px; font-size:13px;
-  z-index:999; transform:translateY(100px); opacity:0; transition:all .3s;
-}
-.toast.show { transform:translateY(0); opacity:1; }
+/* ===== FLASHCARD PANEL ===== */
+.study-input-area{padding:20px;flex-shrink:0}
+.study-input-row{display:flex;gap:8px}
+.study-input{flex:1;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:border .2s}
+.study-input:focus{border-color:var(--accent)}
+.study-btn{padding:12px 20px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--bg);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:transform .1s,opacity .2s;white-space:nowrap}
+.study-btn:hover{transform:scale(1.02)}
+.study-btn:active{transform:scale(.98)}
+.study-btn:disabled{opacity:.5;cursor:not-allowed}
 
-@media(max-width:768px) {
-  .sidebar { width:60px; min-width:60px; }
-  .logo-text, .logo-sub, .nav-item span { display:none; }
-  .nav-item { justify-content:center; padding:10px; }
-  .stats-row { grid-template-columns:1fr 1fr; }
-  .form-grid, .form-grid.cols-3 { grid-template-columns:1fr; }
+.cards-container{flex:1;overflow-y:auto;padding:0 20px 20px;display:flex;flex-direction:column;align-items:center;gap:16px}
+
+.flashcard{width:100%;max-width:500px;min-height:200px;perspective:1000px;cursor:pointer}
+.flashcard-inner{position:relative;width:100%;min-height:200px;transition:transform .6s;transform-style:preserve-3d}
+.flashcard.flipped .flashcard-inner{transform:rotateY(180deg)}
+.flashcard-front,.flashcard-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--radius);padding:24px;display:flex;flex-direction:column;justify-content:center;border:1px solid var(--border)}
+.flashcard-front{background:linear-gradient(135deg,var(--card),var(--surface))}
+.flashcard-back{background:linear-gradient(135deg,rgba(0,229,200,.08),var(--card));transform:rotateY(180deg)}
+.flashcard-label{font-size:11px;color:var(--text-dim);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.flashcard-text{font-size:15px;line-height:1.6}
+.flashcard-source{font-size:11px;color:var(--accent);margin-top:12px}
+.flashcard-hint{font-size:11px;color:var(--text-dim);margin-top:8px;text-align:center}
+
+.flashcard-counter{text-align:center;color:var(--text-dim);font-size:13px;padding:8px}
+
+/* Static layout for flashcards */
+.flashcard{position:relative;perspective:1000px}
+.flashcard-inner{position:relative;min-height:200px}
+.flashcard-front,.flashcard-back{position:relative;min-height:200px}
+.flashcard-back{position:absolute;inset:0}
+
+/* ===== QUIZ PANEL ===== */
+.quiz-container{flex:1;overflow-y:auto;padding:0 20px 20px}
+.quiz-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px}
+.quiz-number{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.quiz-question{font-size:15px;line-height:1.6;margin-bottom:16px}
+.quiz-options{display:flex;flex-direction:column;gap:8px}
+.quiz-option{padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;transition:all .2s;text-align:left;font-family:'Outfit',sans-serif;line-height:1.4}
+.quiz-option:hover:not(.selected):not(.correct):not(.wrong){border-color:var(--accent);background:rgba(0,229,200,.05)}
+.quiz-option.selected{border-color:var(--accent2);background:rgba(0,180,216,.1)}
+.quiz-option.correct{border-color:var(--green);background:rgba(52,211,153,.1);color:var(--green)}
+.quiz-option.wrong{border-color:var(--red);background:rgba(248,113,113,.1);color:var(--red)}
+.quiz-explanation{margin-top:12px;padding:12px;border-radius:10px;background:rgba(0,229,200,.05);border:1px solid rgba(0,229,200,.15);font-size:13px;color:var(--text-dim);line-height:1.5;display:none}
+.quiz-explanation.show{display:block;animation:msgIn .3s ease}
+.quiz-source{font-size:11px;color:var(--accent);margin-top:6px}
+
+.quiz-score{text-align:center;padding:20px;margin-bottom:16px;border-radius:var(--radius);background:linear-gradient(135deg,rgba(0,229,200,.1),rgba(167,139,250,.1));border:1px solid var(--border)}
+.quiz-score-number{font-family:'Playfair Display',serif;font-size:48px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.quiz-score-label{color:var(--text-dim);font-size:13px;margin-top:4px}
+
+/* ===== ORGANIZAÇÃO PANEL ===== */
+.org-container{flex:1;overflow-y:auto;padding:0 20px 20px}
+.org-section{margin-bottom:24px}
+.org-title{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:12px;color:var(--text)}
+.org-subtitle{font-size:12px;color:var(--text-dim);margin-bottom:12px}
+
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.stat-number{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--accent)}
+.stat-label{font-size:11px;color:var(--text-dim);margin-top:4px}
+
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--card);margin-bottom:8px}
+.history-topic{font-size:13px;flex:1}
+.history-type{font-size:11px;padding:3px 8px;border-radius:6px;margin-left:8px}
+.history-type.chat{background:rgba(0,229,200,.1);color:var(--accent)}
+.history-type.flash{background:rgba(167,139,250,.1);color:var(--purple)}
+.history-type.quiz{background:rgba(96,165,250,.1);color:var(--blue)}
+.history-date{font-size:11px;color:var(--text-dim);margin-left:8px;white-space:nowrap}
+.history-score{font-size:12px;font-weight:600;margin-left:8px}
+
+.clear-history-btn{padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;margin-top:8px}
+.clear-history-btn:hover{border-color:var(--red);color:var(--red)}
+
+.books-list{display:flex;flex-direction:column;gap:8px}
+.book-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border)}
+.book-name{font-size:13px;flex:1}
+.book-chunks{font-size:11px;color:var(--accent);background:rgba(0,229,200,.1);padding:3px 8px;border-radius:6px}
+
+/* ===== INPUT BAR ===== */
+.input-area{padding:12px 20px;padding-bottom:max(12px,env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid var(--border);background:rgba(6,11,20,.9);backdrop-filter:blur(20px)}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.input-box{flex:1;padding:12px 16px;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;outline:none;resize:none;max-height:120px;min-height:44px;line-height:1.4;transition:border .2s}
+.input-box:focus{border-color:var(--accent)}
+.send-btn{width:44px;height:44px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--bg);font-size:18px;cursor:pointer;flex-shrink:0;transition:transform .1s,opacity .2s;display:flex;align-items:center;justify-content:center}
+.send-btn:hover{transform:scale(1.05)}
+.send-btn:active{transform:scale(.95)}
+.send-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ===== SAVED PANEL ===== */
+.saved-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90;display:none;opacity:0;transition:opacity .3s}
+.saved-overlay.show{display:block;opacity:1}
+.saved-panel{position:fixed;top:0;right:-340px;width:320px;height:100%;background:var(--surface);border-left:1px solid var(--border);z-index:91;transition:right .3s;display:flex;flex-direction:column;overflow:hidden}
+.saved-panel.show{right:0}
+.saved-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.saved-header h3{font-family:'Playfair Display',serif;font-size:16px}
+.saved-actions{display:flex;gap:6px}
+.saved-action-btn{padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:12px;cursor:pointer}
+.saved-action-btn:hover{border-color:var(--accent);color:var(--accent)}
+.saved-list{flex:1;overflow-y:auto;padding:12px}
+.saved-item{padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--card);margin-bottom:8px;position:relative}
+.saved-item-q{font-size:12px;color:var(--accent);margin-bottom:4px;font-weight:500}
+.saved-item-a{font-size:12px;color:var(--text-dim);line-height:1.5;max-height:60px;overflow:hidden}
+.saved-item-del{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;border:none;background:transparent;color:var(--text-dim);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.saved-item-del:hover{color:var(--red)}
+
+/* ===== TOOLBAR ===== */
+.toolbar{display:flex;gap:6px;padding:0 20px 8px;flex-shrink:0}
+.tool-btn{padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:12px;cursor:pointer;transition:all .2s;font-family:'Outfit',sans-serif;position:relative}
+.tool-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tool-badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--accent);color:var(--bg);font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* ===== EMPTY STATE ===== */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-dim)}
+.empty-state-icon{font-size:48px;margin-bottom:12px;opacity:.5}
+.empty-state-text{font-size:14px}
+
+/* ===== TTS ===== */
+.tts-active{background:rgba(0,229,200,.15) !important;border-color:var(--accent) !important;color:var(--accent) !important}
+
+.tts-stop-float{position:fixed;bottom:90px;right:20px;z-index:80;padding:10px 18px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--red),#e04060);color:#fff;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(248,113,113,.4);animation:msgIn .3s ease;display:none}
+.tts-stop-float.show{display:block}
+
+/* ===== LOADING ===== */
+.loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== SIGNATURE ===== */
+.signature{position:fixed;bottom:8px;right:12px;font-family:'Playfair Display',serif;font-size:11px;color:rgba(255,255,255,.12);z-index:2;pointer-events:none}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:640px){
+  .suggestions{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .msg-user{max-width:90%}
+  .saved-panel{width:85vw}
+  .logo-text{font-size:24px}
 }
 </style>
 </head>
 <body>
-<nav class="sidebar">
-  <div class="logo">
-    <div class="logo-icon">AS</div>
-    <div><div class="logo-text">Auto-Shorts</div><div class="logo-sub">Studio v51</div></div>
-  </div>
-  <div class="nav">
-    <div class="nav-item active" data-page="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span>Dashboard</span></div>
-    <div class="nav-item" data-page="generate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Gerar</span></div>
-    <div class="nav-sep"></div>
-    <div class="nav-item" data-page="video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 9l5 3-5 3V9z"/></svg><span>Vídeo</span></div>
-    <div class="nav-item" data-page="voice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg><span>Voz / TTS</span></div>
-    <div class="nav-item" data-page="subtitles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h4M13 15h4M7 11h10"/></svg><span>Legendas</span></div>
-    <div class="nav-item" data-page="thumbnails"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Thumbnails</span></div>
-    <div class="nav-item" data-page="posting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Agendamento</span></div>
-    <div class="nav-sep"></div>
-    <div class="nav-item" data-page="logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg><span>Terminal</span></div>
-    <div class="nav-item" data-page="analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Analytics</span></div>
-  </div>
-  <div class="sidebar-status"><span class="status-dot off" id="statusDot"></span><span id="statusText">Ocioso</span></div>
-</nav>
+<div class="bg-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
 
-<div class="main">
-  <div class="topbar">
-    <h1 id="pageTitle">Dashboard</h1>
-    <div class="topbar-actions">
-      <button class="btn btn-secondary btn-sm" onclick="openOutput()">📁 Output</button>
-      <button class="btn btn-secondary btn-sm" onclick="loadState()">↻</button>
+<div class="app">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">🏥</div>
+      <div class="logo-text">MEDIC.RG</div>
     </div>
   </div>
-  <div class="content">
 
-    <!-- DASHBOARD -->
-    <div class="page active" id="page-dashboard">
-      <div class="stats-row">
-        <div class="stat-card"><div class="stat-label">Vídeos</div><div class="stat-value cyan" id="statVideos">-</div></div>
-        <div class="stat-card"><div class="stat-label">Tamanho</div><div class="stat-value green" id="statSize">-</div></div>
-        <div class="stat-card"><div class="stat-label">Temas</div><div class="stat-value amber" id="statTemas">-</div></div>
-        <div class="stat-card"><div class="stat-label">APIs</div><div class="stat-value purple" id="statAPIs">-</div></div>
-      </div>
-      <div class="steps" id="pipelineSteps"><div class="step" data-step="1"></div><div class="step" data-step="2"></div><div class="step" data-step="3"></div><div class="step" data-step="4"></div><div class="step" data-step="5"></div></div>
-      <div style="font-size:13px;color:var(--text-dim);margin-bottom:16px" id="stepLabel">Pipeline ocioso</div>
-      <div class="card">
-        <div class="card-title">🎬 Gerar Rápido</div>
-        <div style="display:flex;gap:8px"><input type="text" id="quickTema" placeholder="Tema..." style="flex:1" onkeydown="if(event.key==='Enter')quickGen()"><button class="btn btn-primary" onclick="quickGen()">▶ Gerar</button></div>
-      </div>
-      <div class="card"><div class="card-title">📋 Recentes</div><div id="recentVids" style="font-size:13px;color:var(--text-dim)">Carregando...</div></div>
-      <div class="card"><div class="card-title">📺 Terminal</div><div class="terminal" id="dashTerm" style="max-height:200px"></div></div>
-    </div>
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('chat')"><span class="tab-icon">💬</span>Chat</button>
+    <button class="tab" onclick="switchTab('flashcards')"><span class="tab-icon">🃏</span>Flashcards</button>
+    <button class="tab" onclick="switchTab('quiz')"><span class="tab-icon">📝</span>Quiz</button>
+    <button class="tab" onclick="switchTab('org')"><span class="tab-icon">📊</span>Meu Estudo</button>
+  </div>
 
-    <!-- GERAR -->
-    <div class="page" id="page-generate">
-      <div class="tabs"><div class="tab active" data-tab="gen-single">Avulso</div><div class="tab" data-tab="gen-batch">Batch</div></div>
-      <div class="tab-content active" id="tab-gen-single">
-        <div class="card">
-          <div class="card-title">🎬 Vídeo Único</div>
-          <div class="form-grid">
-            <div class="form-group full"><label>Tema</label><input type="text" id="genTema" placeholder="Ex: A verdade sobre o Triângulo das Bermudas"></div>
-            <div class="form-group"><label>Publicar em</label><div style="display:flex;gap:12px;margin-top:4px"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="genYT" checked> YouTube</label><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="genTT"> TikTok</label></div></div>
-          </div>
-          <div style="margin-top:16px"><button class="btn btn-primary" onclick="generate()">▶ Gerar</button> <button class="btn btn-danger" onclick="stopProc()">⏹ Parar</button></div>
-        </div>
-      </div>
-      <div class="tab-content" id="tab-gen-batch">
-        <div class="card">
-          <div class="card-title">📦 Batch</div>
-          <div class="form-grid">
-            <div class="form-group"><label>Modo</label><select id="batchMode" onchange="toggleBatch()"><option value="preset">Preset</option><option value="serie">Série (Groq)</option></select></div>
-            <div class="form-group" id="grpPreset"><label>Preset</label><select id="batchPreset"><option value="historias_ocultas">Histórias Ocultas</option><option value="historias_fake">Histórias Fake</option><option value="conspiracoes">Conspirações</option><option value="corpo_humano">Corpo Humano</option><option value="lugares_proibidos">Lugares Proibidos</option></select></div>
-            <div class="form-group" id="grpSerie" style="display:none"><label>Série</label><input type="text" id="batchSerie" placeholder="Ex: Lendas urbanas"></div>
-            <div class="form-group"><label>Quantidade</label><select id="batchQtd"><option value="1">1</option><option value="3">3</option><option value="5" selected>5</option><option value="7">7</option><option value="10">10</option></select></div>
-            <div class="form-group"><label>Início</label><select id="batchInicio"><option value="amanha">Amanhã</option><option value="hoje">Hoje</option></select></div>
-            <div class="form-group"><label>Publicar</label><div style="display:flex;gap:12px;margin-top:4px"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="batchYT" checked> YT</label><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="batchTT"> TT</label></div></div>
-          </div>
-          <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-primary" onclick="batch()">▶ Batch</button>
-            <button class="btn btn-secondary" onclick="batchAct('resume')">↻ Retomar</button>
-            <button class="btn btn-secondary" onclick="batchAct('status')">📊 Status</button>
-            <button class="btn btn-secondary" onclick="batchAct('history')">📜 Histórico</button>
-            <button class="btn btn-danger" onclick="stopProc()">⏹ Parar</button>
-          </div>
+  <!-- ===== CHAT PANEL ===== -->
+  <div class="panel active" id="panel-chat">
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcome">
+        <h2>O que deseja estudar?</h2>
+        <p>Pergunte sobre Fisiologia, Semiologia ou qualquer tema dos livros</p>
+        <div class="suggestions">
+          <div class="suggestion" onclick="askSuggestion('Como funciona o potencial de acao?')">⚡ Como funciona o potencial de acao?</div>
+          <div class="suggestion" onclick="askSuggestion('Explique o ciclo cardiaco')">❤️ Explique o ciclo cardiaco</div>
+          <div class="suggestion" onclick="askSuggestion('O que e ausculta pulmonar?')">🫁 O que e ausculta pulmonar?</div>
+          <div class="suggestion" onclick="askSuggestion('Como ocorre a filtracao glomerular?')">🫘 Filtracao glomerular</div>
+          <div class="suggestion" onclick="askSuggestion('Explique de forma BEM simples, como se eu tivesse 5 anos: como o coracao bombeia sangue?')">🧒 ELI5: Coracao</div>
         </div>
       </div>
     </div>
-
-    <!-- VIDEO -->
-    <div class="page" id="page-video">
-      <div class="card">
-        <div class="card-title">⏱ Duração</div>
-        <div class="form-grid cols-3">
-          <div class="form-group"><label>Alvo (seg)</label><div class="range-row"><input type="range" min="30" max="90" id="cfgDur" oninput="rv(this)"><span class="range-val" id="cfgDur_v"></span></div></div>
-          <div class="form-group"><label>Mínimo</label><div class="range-row"><input type="range" min="20" max="80" id="cfgDurMin" oninput="rv(this)"><span class="range-val" id="cfgDurMin_v"></span></div></div>
-          <div class="form-group"><label>Máximo</label><div class="range-row"><input type="range" min="40" max="120" id="cfgDurMax" oninput="rv(this)"><span class="range-val" id="cfgDurMax_v"></span></div></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">🎞 Encoding</div>
-        <div class="form-grid">
-          <div class="form-group"><label>Resolução</label><select id="cfgRes"><option value="1080x1920">1080×1920 (FHD)</option><option value="720x1280">720×1280 (HD)</option><option value="1440x2560">1440×2560 (2K)</option></select></div>
-          <div class="form-group"><label>FPS</label><select id="cfgFPS"><option value="24">24</option><option value="30">30</option><option value="60">60</option></select></div>
-          <div class="form-group"><label>Preset</label><select id="cfgPreset"><option value="fast">fast</option><option value="medium">medium</option><option value="slow">slow</option></select></div>
-          <div class="form-group"><label>Threads</label><div class="range-row"><input type="range" min="2" max="20" id="cfgThreads" oninput="rv(this)"><span class="range-val" id="cfgThreads_v"></span></div></div>
-        </div>
-      </div>
-      <div style="text-align:right"><button class="btn btn-primary" onclick="saveC('video')">💾 Salvar</button></div>
+    <div class="toolbar">
+      <button class="tool-btn" onclick="toggleSaved()">📑 Salvos <span class="tool-badge" id="savedBadge" style="display:none">0</span></button>
+      <button class="tool-btn" onclick="toggleProviders()">⚡ APIs</button>
     </div>
-
-    <!-- VOZ -->
-    <div class="page" id="page-voice">
-      <div class="card">
-        <div class="card-title">🎙 Voz</div>
-        <div class="form-grid">
-          <div class="form-group"><label>Voice (Edge TTS)</label><select id="cfgVoice"><option value="pt-BR-AntonioNeural">🇧🇷 Antonio</option><option value="pt-BR-FranciscaNeural">🇧🇷 Francisca</option><option value="pt-BR-ThalitaNeural">🇧🇷 Thalita</option><option value="en-US-GuyNeural">🇺🇸 Guy</option><option value="en-US-JennyNeural">🇺🇸 Jenny</option><option value="en-US-BrianMultilingualNeural">🌐 Brian</option><option value="es-MX-JorgeNeural">🇲🇽 Jorge</option></select></div>
-          <div class="form-group"><label>Pitch (tom)</label><div class="range-row"><input type="range" min="-10" max="10" id="cfgPitch" oninput="rv(this,'Hz')"><span class="range-val" id="cfgPitch_v"></span></div></div>
-          <div class="form-group"><label>Rate Min (%)</label><div class="range-row"><input type="range" min="-30" max="0" id="cfgRateMin" oninput="rv(this,'%')"><span class="range-val" id="cfgRateMin_v"></span></div></div>
-          <div class="form-group"><label>Rate Max (%)</label><div class="range-row"><input type="range" min="0" max="30" id="cfgRateMax" oninput="rv(this,'%')"><span class="range-val" id="cfgRateMax_v"></span></div></div>
-        </div>
+    <div class="input-area">
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <button class="msg-btn" id="eli5Toggle" onclick="toggleEli5()" style="font-size:12px">🧒 Modo Simples: OFF</button>
       </div>
-      <div class="card">
-        <div class="card-title">🤖 Whisper</div>
-        <div class="form-grid">
-          <div class="form-group"><label>Modelo</label><select id="cfgWhisper"><option value="tiny">tiny</option><option value="base">base</option><option value="small">small</option><option value="medium">medium</option><option value="large-v3">large-v3</option></select></div>
-          <div class="form-group"><label>GPU</label><select id="cfgGPU"><option value="true">CUDA</option><option value="false">CPU</option></select></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">🔊 Testar Voz</div>
-        <div class="form-grid">
-          <div class="form-group full">
-            <label>Texto de teste (deixe vazio pra usar padrão)</label>
-            <input type="text" id="ttsTestText" placeholder="Texto personalizado ou vazio pra padrão...">
-          </div>
-        </div>
-        <div style="margin-top:12px;display:flex;align-items:center;gap:12px;">
-          <button class="btn btn-primary" id="btnTTSTest" onclick="testTTS()">🔊 Ouvir Voz</button>
-          <button class="btn btn-secondary" id="btnTTSStop" onclick="stopTTS()" style="display:none">⏹ Parar</button>
-          <span id="ttsStatus" style="font-size:12px;color:var(--text-dim)"></span>
-        </div>
-        <audio id="ttsAudio" style="display:none"></audio>
-      </div>
-      <div style="text-align:right"><button class="btn btn-primary" onclick="saveC('voice')">💾 Salvar</button></div>
-    </div>
-
-    <!-- LEGENDAS -->
-    <div class="page" id="page-subtitles">
-      <div class="card">
-        <div class="card-title">👁 Preview</div>
-        <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
-          <div id="subPrevFrame" style="
-            width:270px;min-width:270px;aspect-ratio:9/16;
-            border-radius:var(--radius);overflow:hidden;position:relative;
-            box-shadow:0 8px 32px rgba(0,0,0,0.5);
-          ">
-            <!-- BG scene -->
-            <div style="position:absolute;inset:0;
-              background:linear-gradient(170deg,#1a2040 0%,#0d1a3a 30%,#1a3050 60%,#091525 100%);
-            "></div>
-            <!-- Fake scene elements -->
-            <div style="position:absolute;inset:0;opacity:0.3;background:url('data:image/svg+xml,<svg viewBox=%220 0 270 480%22 xmlns=%22http://www.w3.org/2000/svg%22><circle cx=%22135%22 cy=%22160%22 r=%2270%22 fill=%22%23203060%22/><circle cx=%2280%22 cy=%22280%22 r=%2245%22 fill=%22%231a2848%22/><circle cx=%22210%22 cy=%22230%22 r=%2235%22 fill=%22%23182545%22/><rect x=%2250%22 y=%22350%22 width=%22170%22 height=%2260%22 rx=%228%22 fill=%22%23152035%22/></svg>') center/cover;"></div>
-            <!-- Subtitle area -->
-            <div id="subPrevArea" style="
-              position:absolute;left:0;right:0;bottom:30%;
-              display:flex;justify-content:center;padding:0 16px;z-index:2;
-              transition:bottom .3s;
-            ">
-              <div id="subPrevTxt" style="
-                font-family:Arial,sans-serif;font-weight:700;
-                text-transform:uppercase;text-align:center;line-height:1.3;
-                font-size:22px;color:white;
-                text-shadow:
-                  -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
-                  -1px 0 0 #000, 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000;
-              ">NINGUÉM <span class="highlight" style="color:yellow">ESPERAVA</span> O QUE VEM</div>
-            </div>
-            <!-- Format badge -->
-            <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);padding:2px 6px;border-radius:3px;font-size:9px;color:var(--text-muted);font-family:var(--mono);z-index:4;">1080×1920</div>
-            <!-- Play icon -->
-            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);z-index:1;opacity:0.15;">
-              <svg width="60" height="60" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            </div>
-          </div>
-          <!-- Info -->
-          <div style="flex:1;min-width:200px;">
-            <div style="font-size:12px;color:var(--text-dim);line-height:1.8;">
-              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;">Estilo ASS (Advanced SubStation):</div>
-              <div>🔤 Palavra por palavra com <strong style="color:yellow">highlight</strong></div>
-              <div>⬛ Contorno preto grosso (outline)</div>
-              <div>📍 Posição ajustável verticalmente</div>
-              <div>📏 Frases curtas = mais impacto</div>
-              <div style="margin-top:12px;padding:10px;background:var(--bg-input);border-radius:8px;font-family:var(--mono);font-size:11px;line-height:1.6;">
-                Style: Normal, <span style="color:var(--cyan)">Arial</span>, <span style="color:var(--amber)">72</span>,<br>
-                <span style="color:white">White</span> + <span style="color:yellow">Yellow</span> highlight,<br>
-                Outline: <span style="color:var(--text)">4px black</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">🔤 Estilo</div>
-        <div class="form-grid">
-          <div class="form-group"><label>Fonte</label><select id="cfgSubFont" onchange="updSub()"><option value="C:/Windows/Fonts/arialbd.ttf">Arial Bold</option><option value="C:/Windows/Fonts/impact.ttf">Impact</option><option value="C:/Windows/Fonts/calibrib.ttf">Calibri Bold</option></select></div>
-          <div class="form-group"><label>Tamanho</label><div class="range-row"><input type="range" min="40" max="120" id="cfgSubSize" oninput="rv(this);updSub()"><span class="range-val" id="cfgSubSize_v"></span></div></div>
-          <div class="form-group"><label>Cor Texto</label><div class="color-row"><input type="color" id="cfgSubColor" value="#ffffff" onchange="updSub()"><span style="font-size:12px;color:var(--text-dim)" id="lbSubC">white</span></div></div>
-          <div class="form-group"><label>Cor Destaque</label><div class="color-row"><input type="color" id="cfgSubHL" value="#ffff00" onchange="updSub()"><span style="font-size:12px;color:var(--text-dim)" id="lbSubHL">yellow</span></div></div>
-          <div class="form-group"><label>Cor Borda</label><div class="color-row"><input type="color" id="cfgSubStroke" value="#000000" onchange="updSub()"><span style="font-size:12px;color:var(--text-dim)" id="lbSubS">black</span></div></div>
-          <div class="form-group"><label>Borda (px)</label><div class="range-row"><input type="range" min="0" max="8" id="cfgSubStrokeW" oninput="rv(this);updSub()"><span class="range-val" id="cfgSubStrokeW_v"></span></div></div>
-          <div class="form-group"><label>Posição Y (%)</label><div class="range-row"><input type="range" min="40" max="90" id="cfgSubPosY" oninput="rv(this,'%');updSub()"><span class="range-val" id="cfgSubPosY_v"></span></div></div>
-          <div class="form-group"><label>Max Chars/Linha</label><div class="range-row"><input type="range" min="15" max="45" id="cfgSubMax" oninput="rv(this)"><span class="range-val" id="cfgSubMax_v"></span></div></div>
-        </div>
-      </div>
-      <div style="text-align:right"><button class="btn btn-primary" onclick="saveC('subtitles')">💾 Salvar</button></div>
-    </div>
-
-    <!-- THUMBNAILS -->
-    <div class="page" id="page-thumbnails">
-      <!-- PREVIEW -->
-      <div class="card">
-        <div class="card-title">👁 Preview da Thumbnail</div>
-        <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
-          <div id="thumbPreview" style="
-            width:270px;min-width:270px;aspect-ratio:9/16;
-            border-radius:var(--radius);overflow:hidden;position:relative;
-            box-shadow:0 8px 32px rgba(0,0,0,0.5);
-          ">
-            <!-- BG: simulated scene image with blur+darken -->
-            <div id="thumbBG" style="position:absolute;inset:0;
-              background:linear-gradient(170deg,#1a1040 0%,#0d1a3a 30%,#0a2a45 60%,#091525 100%);
-              filter:blur(2px) brightness(0.55) contrast(1.2);
-            "></div>
-            <!-- Noise grain texture -->
-            <div style="position:absolute;inset:0;opacity:0.08;background:url('data:image/svg+xml,<svg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22/></filter><rect width=%22200%22 height=%22200%22 filter=%22url(%23n)%22/></svg>');"></div>
-            <!-- Top bar -->
-            <div id="thumbBarTop" style="position:absolute;top:0;left:0;right:0;height:8px;background:#ff2d2d;z-index:3;"></div>
-            <!-- Bottom bar -->
-            <div id="thumbBarBot" style="position:absolute;bottom:0;left:0;right:0;height:8px;background:#ff2d2d;z-index:3;"></div>
-            <!-- Text block with semi-transparent bg -->
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;z-index:2;">
-              <div id="thumbTextBox" style="
-                background:rgba(0,0,0,0.55);border-radius:12px;padding:20px 16px;
-                width:100%;text-align:center;
-              ">
-                <div id="thumbTitle" style="
-                  font-family:Impact,sans-serif;font-size:24px;color:white;
-                  text-transform:uppercase;line-height:1.25;letter-spacing:0.5px;
-                  text-shadow:
-                    -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000,
-                    -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000,
-                    0 0 8px rgba(0,0,0,0.9);
-                ">O SEGREDO QUE NINGUÉM CONTA</div>
-                <!-- Accent line -->
-                <div id="thumbAccent" style="
-                  width:50%;height:4px;background:#ff2d2d;
-                  margin:12px auto 0;border-radius:2px;
-                "></div>
-              </div>
-            </div>
-            <!-- Format badge -->
-            <div style="position:absolute;top:16px;right:8px;background:rgba(0,0,0,0.7);padding:2px 6px;border-radius:3px;font-size:9px;color:var(--text-muted);font-family:var(--mono);z-index:4;">1080×1920</div>
-          </div>
-          <!-- Info panel -->
-          <div style="flex:1;min-width:200px;">
-            <div style="font-size:12px;color:var(--text-dim);line-height:1.8;">
-              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;">Como funciona:</div>
-              <div>📸 Imagem do <strong style="color:var(--cyan)">clímax</strong> do vídeo (70% da duração)</div>
-              <div>🌑 Escurecida 45% + blur suave</div>
-              <div>📦 Caixa semi-transparente atrás do texto</div>
-              <div>🔤 Título em <strong style="color:var(--cyan)">CAPS</strong> com contorno preto grosso</div>
-              <div>🟥 Barras coloridas topo + base</div>
-              <div>➖ Linha de destaque abaixo do título</div>
-              <div style="margin-top:12px;padding:10px;background:var(--bg-input);border-radius:8px;font-family:var(--mono);font-size:11px;">
-                Fonte auto-ajusta de 120→50px<br>pra caber em no máximo 4 linhas
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">🎨 Personalizar</div>
-        <div class="form-grid">
-          <div class="form-group"><label>Texto Preview</label><input type="text" id="cfgThumbText" value="O SEGREDO QUE NINGUÉM CONTA" oninput="updThumb()" style="font-size:12px"></div>
-          <div class="form-group"><label>Cor das Barras</label>
-            <div style="display:flex;gap:6px;margin-top:4px;">
-              <div onclick="setBarColor('#ff2d2d')" style="width:28px;height:28px;border-radius:6px;background:#ff2d2d;cursor:pointer;border:2px solid transparent;" class="bar-opt"></div>
-              <div onclick="setBarColor('#ffa500')" style="width:28px;height:28px;border-radius:6px;background:#ffa500;cursor:pointer;border:2px solid transparent;" class="bar-opt"></div>
-              <div onclick="setBarColor('#dc143c')" style="width:28px;height:28px;border-radius:6px;background:#dc143c;cursor:pointer;border:2px solid transparent;" class="bar-opt"></div>
-              <div onclick="setBarColor('#ff4500')" style="width:28px;height:28px;border-radius:6px;background:#ff4500;cursor:pointer;border:2px solid transparent;" class="bar-opt"></div>
-              <div onclick="setBarColor('#22d3ee')" style="width:28px;height:28px;border-radius:6px;background:#22d3ee;cursor:pointer;border:2px solid transparent;" class="bar-opt"></div>
-              <div onclick="setBarColor('#a855f7')" style="width:28px;height:28px;border-radius:6px;background:#a855f7;cursor:pointer;border:2px solid transparent;" class="bar-opt"></div>
-            </div>
-          </div>
-          <div class="form-group"><label>Escurecimento</label><div class="range-row"><input type="range" min="20" max="80" value="55" id="cfgThumbDark" oninput="rv(this,'%');updThumb()"><span class="range-val" id="cfgThumbDark_v">55%</span></div></div>
-          <div class="form-group"><label>Blur</label><div class="range-row"><input type="range" min="0" max="8" value="2" id="cfgThumbBlur" oninput="rv(this,'px');updThumb()"><span class="range-val" id="cfgThumbBlur_v">2px</span></div></div>
-          <div class="form-group"><label>Tamanho Texto</label><div class="range-row"><input type="range" min="16" max="36" value="24" id="cfgThumbSize" oninput="rv(this,'px');updThumb()"><span class="range-val" id="cfgThumbSize_v">24px</span></div></div>
-          <div class="form-group"><label>Opacidade Caixa</label><div class="range-row"><input type="range" min="20" max="80" value="55" id="cfgThumbBoxOp" oninput="rv(this,'%');updThumb()"><span class="range-val" id="cfgThumbBoxOp_v">55%</span></div></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">🔄 Atualizar Canal</div>
-        <p style="font-size:13px;color:var(--text-dim);margin-bottom:12px">Regera e faz upload das thumbnails dos vídeos já publicados.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="runCmd('atualizar_thumbs.py')">🔄 Atualizar Todas</button>
-          <button class="btn btn-secondary" onclick="runCmd('atualizar_thumbs.py --limite 5')">Últimas 5</button>
-          <button class="btn btn-secondary" onclick="runCmd('atualizar_thumbs.py --listar')">📋 Listar</button>
-        </div>
+      <div class="input-row">
+        <textarea class="input-box" id="chatInput" placeholder="Pergunte sobre medicina..." rows="1" onkeydown="handleChatKey(event)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
       </div>
     </div>
+  </div>
 
-    <!-- AGENDAMENTO -->
-    <div class="page" id="page-posting">
-      <div class="card">
-        <div class="card-title">▶ YouTube</div>
-        <div class="form-grid">
-          <div class="form-group"><label>Max/dia</label><select id="cfgYTMax"><option>3</option><option>4</option><option selected>5</option><option>7</option><option>10</option></select></div>
-          <div class="form-group"><label>Intervalo (h)</label><div class="range-row"><input type="range" min="0.5" max="6" step="0.5" id="cfgYTInt" oninput="rv(this,'h')"><span class="range-val" id="cfgYTInt_v"></span></div></div>
-          <div class="form-group"><label>Início</label><input type="time" id="cfgYTStart" value="08:00"></div>
-          <div class="form-group"><label>Fim</label><input type="time" id="cfgYTEnd" value="23:00"></div>
+  <!-- ===== FLASHCARD PANEL ===== -->
+  <div class="panel" id="panel-flashcards">
+    <div class="study-input-area">
+      <div class="study-input-row">
+        <input class="study-input" id="flashTopic" placeholder="Tema: ex. sistema nervoso, pressao arterial..." onkeydown="if(event.key==='Enter')generateFlashcards()">
+        <button class="study-btn" id="flashBtn" onclick="generateFlashcards()">Gerar</button>
+      </div>
+    </div>
+    <div class="cards-container" id="flashContainer">
+      <div class="empty-state">
+        <div class="empty-state-icon">🃏</div>
+        <div class="empty-state-text">Digite um tema e clique em Gerar<br>para criar flashcards dos livros</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== QUIZ PANEL ===== -->
+  <div class="panel" id="panel-quiz">
+    <div class="study-input-area">
+      <div class="study-input-row">
+        <input class="study-input" id="quizTopic" placeholder="Tema do quiz: ex. sistema cardiovascular..." onkeydown="if(event.key==='Enter')generateQuiz()">
+        <button class="study-btn" id="quizBtn" onclick="generateQuiz()">Gerar Quiz</button>
+      </div>
+    </div>
+    <div class="quiz-container" id="quizContainer">
+      <div class="empty-state">
+        <div class="empty-state-icon">📝</div>
+        <div class="empty-state-text">Digite um tema e clique em Gerar Quiz<br>para testar seus conhecimentos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ORGANIZAÇÃO PANEL ===== -->
+  <div class="panel" id="panel-org">
+    <div class="org-container">
+      <div class="org-section">
+        <div class="org-title">Estatisticas</div>
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card"><div class="stat-number" id="statQuestions">0</div><div class="stat-label">Perguntas</div></div>
+          <div class="stat-card"><div class="stat-number" id="statFlash">0</div><div class="stat-label">Flashcards</div></div>
+          <div class="stat-card"><div class="stat-number" id="statQuiz">0</div><div class="stat-label">Quizzes</div></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-title">🎵 TikTok</div>
-        <div class="form-grid">
-          <div class="form-group"><label>Max/dia</label><select id="cfgTTMax"><option>3</option><option>5</option><option selected>7</option><option>10</option></select></div>
-          <div class="form-group"><label>Intervalo (h)</label><div class="range-row"><input type="range" min="0.5" max="6" step="0.5" id="cfgTTInt" oninput="rv(this,'h')"><span class="range-val" id="cfgTTInt_v"></span></div></div>
-          <div class="form-group"><label>Início</label><input type="time" id="cfgTTStart" value="07:00"></div>
-          <div class="form-group"><label>Fim</label><input type="time" id="cfgTTEnd" value="23:00"></div>
-        </div>
+      <div class="org-section">
+        <div class="org-title">Livros na Base</div>
+        <div class="books-list" id="booksList"></div>
       </div>
-      <div style="text-align:right"><button class="btn btn-primary" onclick="saveC('posting')">💾 Salvar</button></div>
-    </div>
-
-    <!-- TERMINAL -->
-    <div class="page" id="page-logs">
-      <div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn btn-secondary btn-sm" onclick="clearLogs()">🗑 Limpar</button><button class="btn btn-danger btn-sm" onclick="stopProc()">⏹ Parar</button></div>
-      <div class="terminal" id="logsTerm" style="max-height:calc(100vh - 180px)"></div>
-    </div>
-
-    <!-- ANALYTICS -->
-    <div class="page" id="page-analytics">
-      <div class="stats-row">
-        <div class="stat-card"><div class="stat-label">Total Vídeos</div><div class="stat-value cyan" id="anVids">-</div></div>
-        <div class="stat-card"><div class="stat-label">Tamanho</div><div class="stat-value green" id="anSize">-</div></div>
-        <div class="stat-card"><div class="stat-label">Média</div><div class="stat-value amber" id="anAvg">-</div></div>
-        <div class="stat-card"><div class="stat-label">Temas</div><div class="stat-value purple" id="anTemas">-</div></div>
+      <div class="org-section">
+        <div class="org-title">Historico de Estudo</div>
+        <div id="historyList"></div>
+        <button class="clear-history-btn" onclick="clearHistory()">Limpar historico</button>
       </div>
-      <div class="card"><div class="card-title">📊 Produção (14d)</div><div id="chartD" style="display:flex;align-items:flex-end;gap:4px;height:120px"></div></div>
-      <div class="card"><div class="card-title">📜 Temas Recentes</div><div id="recTemas" style="font-size:13px;max-height:300px;overflow-y:auto"></div></div>
     </div>
-
   </div>
 </div>
-<div class="toast" id="toast"></div>
+
+<!-- SAVED PANEL -->
+<div class="saved-overlay" id="savedOverlay" onclick="toggleSaved()"></div>
+<div class="saved-panel" id="savedPanel">
+  <div class="saved-header">
+    <h3>📑 Respostas Salvas</h3>
+    <div class="saved-actions">
+      <button class="saved-action-btn" onclick="exportSaved()">⬇ Exportar</button>
+    </div>
+  </div>
+  <div class="saved-list" id="savedList"></div>
+</div>
+
+<div class="signature">Rodolfo Gabriel</div>
+<button class="tts-stop-float" id="ttsStopBtn" onclick="stopTTS()">⏹ Parar Audio</button>
 
 <script>
-let ST={},sse=null;
-const $=id=>document.getElementById(id);
+// ===== STATE =====
+let chatHistory = [];
+let savedItems = JSON.parse(localStorage.getItem('medicrg_saved') || '[]');
+let studyHistory = JSON.parse(localStorage.getItem('medicrg_history') || '[]');
+let studyStats = JSON.parse(localStorage.getItem('medicrg_stats') || '{"questions":0,"flashcards":0,"quizzes":0}');
+let currentQuiz = null;
+let ttsUtterance = null;
+let eli5Mode = false;
 
-// Nav
-document.querySelectorAll('.nav-item[data-page]').forEach(n=>{
-  n.onclick=()=>{
-    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
-    n.classList.add('active');
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    $('page-'+n.dataset.page).classList.add('active');
-    $('pageTitle').textContent=n.querySelector('span')?.textContent||'';
-    if(n.dataset.page==='analytics')loadAn();
-  };
-});
-document.querySelectorAll('.tab[data-tab]').forEach(t=>{
-  t.onclick=()=>{
-    t.parentElement.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    t.closest('.page').querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    $('tab-'+t.dataset.tab).classList.add('active');
-  };
-});
-
-function rv(el,s=''){$( el.id+'_v').textContent=el.value+s;}
-function toggleBatch(){const m=$('batchMode').value;$('grpPreset').style.display=m==='preset'?'':'none';$('grpSerie').style.display=m==='serie'?'':'none';}
-
-const NH={white:'#ffffff',yellow:'#ffff00',black:'#000000',red:'#ff0000',green:'#00ff00',blue:'#0000ff',cyan:'#00ffff',orange:'#ff6600'};
-const HN=Object.fromEntries(Object.entries(NH).map(([k,v])=>[v,k]));
-function n2h(n){return NH[n.toLowerCase()]||n;}
-function h2n(h){return HN[h.toLowerCase()]||h;}
-
-function updSub(){
-  const t=$('subPrevTxt'),sz=$('cfgSubSize').value,c=$('cfgSubColor').value,
-    hl=$('cfgSubHL').value,sc=$('cfgSubStroke').value,sw=$('cfgSubStrokeW').value,
-    f=$('cfgSubFont').value,posY=$('cfgSubPosY').value;
-  let ff='Arial';if(f.includes('impact'))ff='Impact';else if(f.includes('calibri'))ff='Calibri';
-  t.style.fontFamily=ff+',sans-serif';
-  t.style.fontSize=Math.round(sz*0.32)+'px';
-  t.style.color=c;
-  t.style.webkitTextStroke=Math.max(1,Math.round(sw*0.6))+'px '+sc;
-  t.style.textShadow=`-${sw}px -${sw}px 0 ${sc}, ${sw}px -${sw}px 0 ${sc}, -${sw}px ${sw}px 0 ${sc}, ${sw}px ${sw}px 0 ${sc}`;
-  t.querySelector('.highlight').style.color=hl;
-  // Position: posY is 40-90 representing %, convert to bottom offset
-  $('subPrevArea').style.bottom=(100-posY)+'%';
-  $('lbSubC').textContent=h2n(c);$('lbSubHL').textContent=h2n(hl);$('lbSubS').textContent=h2n(sc);
-}
-
-function updThumb(){
-  const title=($('cfgThumbText').value||'PREVIEW').toUpperCase();
-  const size=$('cfgThumbSize').value;
-  const dark=$('cfgThumbDark').value;
-  const blur=$('cfgThumbBlur').value;
-  const boxOp=$('cfgThumbBoxOp').value;
-  $('thumbTitle').textContent=title;
-  $('thumbTitle').style.fontSize=size+'px';
-  $('thumbBG').style.filter='blur('+blur+'px) brightness('+(1-dark/100)+') contrast(1.2)';
-  $('thumbTextBox').style.background='rgba(0,0,0,'+(boxOp/100)+')';
-}
-function setBarColor(c){
-  $('thumbBarTop').style.background=c;
-  $('thumbBarBot').style.background=c;
-  $('thumbAccent').style.background=c;
-  document.querySelectorAll('.bar-opt').forEach(el=>{
-    el.style.borderColor=el.style.background===c?'white':'transparent';
-  });
-}
-
-// Load state
-async function loadState(){
-  try{const r=await fetch('/api/state');ST=await r.json();popUI();}catch(e){}
-}
-function popUI(){
-  const c=ST.config||{},sq=s=>String(s||'').replace(/['"]/g,'').trim();
-  $('statVideos').textContent=ST.videos?.length||0;
-  const mb=ST.videos?.reduce((s,v)=>s+v.size_mb,0)||0;
-  $('statSize').textContent=mb>1024?(mb/1024).toFixed(1)+' GB':mb.toFixed(0)+' MB';
-  $('statAPIs').textContent=Object.values(ST.apis||{}).filter(Boolean).length+'/'+Object.keys(ST.apis||{}).length;
-  const vids=ST.videos||[];
-  $('recentVids').innerHTML=vids.length===0?'<div style="color:var(--text-muted)">Nenhum</div>':
-    vids.slice(0,8).map(v=>`<div style="padding:5px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>🎬 ${v.name}</span><span style="color:var(--text-muted);font-size:12px">${v.size_mb}MB · ${v.created}</span></div>`).join('');
-
-  updPipe(ST.step||0,ST.running);
-  if(ST.running){$('statusDot').className='status-dot on';$('statusText').textContent=ST.step_label||'...';}
-  else{$('statusDot').className='status-dot off';$('statusText').textContent='Ocioso';}
-
-  sv('cfgDur',c.TARGET_DURATION,58);sv('cfgDurMin',c.TARGET_DURATION_MIN,50);sv('cfgDurMax',c.TARGET_DURATION_MAX,70);
-  sv('cfgThreads',c.VIDEO_THREADS,10);
-  ss('cfgRes',sq(c.VIDEO_WIDTH||'1080')+'x'+sq(c.VIDEO_HEIGHT||'1920'));
-  ss('cfgFPS',sq(c.VIDEO_FPS||'30'));ss('cfgPreset',sq(c.VIDEO_PRESET||'medium'));
-
-  // Try to extract voice from TTS_VOICES list or TTS_VOICE
-  let voice = sq(c.TTS_VOICE || 'pt-BR-AntonioNeural');
-  if (voice.startsWith('TTS_VOICES')) voice = 'pt-BR-AntonioNeural';
-  ss('cfgVoice', voice);
-  
-  sv('cfgPitch',parseInt(String(c.TTS_PITCH||'0').replace(/['"Hz]/g,''))||0,0,'Hz');
-  sv('cfgRateMin',c.TTS_RATE_MIN,-10,'%');sv('cfgRateMax',c.TTS_RATE_MAX,13,'%');
-  ss('cfgWhisper',sq(c.WHISPER_MODEL||'small'));
-  ss('cfgGPU',sq(String(c.GPU_ENABLED||'True')).toLowerCase());
-
-  sv('cfgSubSize',c.SUBTITLE_FONT_SIZE,72);sv('cfgSubStrokeW',c.SUBTITLE_STROKE_WIDTH,4);
-  sv('cfgSubPosY',Math.round((c.SUBTITLE_POSITION_Y||0.70)*100),70,'%');
-  sv('cfgSubMax',c.SUBTITLE_MAX_CHARS,28);
-  ss('cfgSubFont',sq(c.SUBTITLE_FONT||'C:/Windows/Fonts/arialbd.ttf'));
-  $('cfgSubColor').value=n2h(sq(c.SUBTITLE_COLOR||'white'));
-  $('cfgSubHL').value=n2h(sq(c.SUBTITLE_HIGHLIGHT_COLOR||'yellow'));
-  $('cfgSubStroke').value=n2h(sq(c.SUBTITLE_STROKE_COLOR||'black'));
-  updSub();
-
-  sv('cfgYTInt',2.0,2.0,'h');ss('cfgYTMax','5');
-  sv('cfgTTInt',1.5,1.5,'h');ss('cfgTTMax','7');
-
-  document.querySelectorAll('input[type=range]').forEach(r=>rv(r,''));
-  // Re-set suffixed ones
-  rv($('cfgPitch'),'Hz');rv($('cfgRateMin'),'%');rv($('cfgRateMax'),'%');
-  rv($('cfgSubPosY'),'%');rv($('cfgYTInt'),'h');rv($('cfgTTInt'),'h');
-  updSub();
-}
-
-function sv(id,val,fb,s=''){const e=$(id);if(!e)return;e.value=val!=null?String(val).replace(/['"]/g,''):fb;const d=$(id+'_v');if(d)d.textContent=e.value+s;}
-function ss(id,val){const e=$(id);if(!e)return;const v=String(val).trim();for(const o of e.options)if(o.value===v){e.value=v;return;}}
-
-// Save config
-async function saveC(sec){
-  let d={};
-  if(sec==='video'){
-    d.TARGET_DURATION=+$('cfgDur').value;d.TARGET_DURATION_MIN=+$('cfgDurMin').value;d.TARGET_DURATION_MAX=+$('cfgDurMax').value;
-    const[w,h]=$('cfgRes').value.split('x');d.VIDEO_WIDTH=+w;d.VIDEO_HEIGHT=+h;
-    d.VIDEO_FPS=+$('cfgFPS').value;d.VIDEO_PRESET=$('cfgPreset').value;d.VIDEO_THREADS=+$('cfgThreads').value;
+// ===== ELI5 TOGGLE =====
+function toggleEli5() {
+  eli5Mode = !eli5Mode;
+  const btn = document.getElementById('eli5Toggle');
+  if (eli5Mode) {
+    btn.textContent = '🧒 Modo Simples: ON';
+    btn.classList.add('active');
+    document.getElementById('chatInput').placeholder = '🧒 Modo simplificado ativado! Pergunte...';
+  } else {
+    btn.textContent = '🧒 Modo Simples: OFF';
+    btn.classList.remove('active');
+    document.getElementById('chatInput').placeholder = 'Pergunte sobre medicina...';
   }
-  if(sec==='voice'){
-    d.TTS_VOICE=$('cfgVoice').value;d.TTS_PITCH=$('cfgPitch').value+'Hz';
-    d.TTS_RATE_MIN=+$('cfgRateMin').value;d.TTS_RATE_MAX=+$('cfgRateMax').value;
-    d.WHISPER_MODEL=$('cfgWhisper').value;d.GPU_ENABLED=$('cfgGPU').value;
-  }
-  if(sec==='subtitles'){
-    d.SUBTITLE_FONT=$('cfgSubFont').value;d.SUBTITLE_FONT_SIZE=+$('cfgSubSize').value;
-    d.SUBTITLE_COLOR=h2n($('cfgSubColor').value);d.SUBTITLE_HIGHLIGHT_COLOR=h2n($('cfgSubHL').value);
-    d.SUBTITLE_STROKE_COLOR=h2n($('cfgSubStroke').value);d.SUBTITLE_STROKE_WIDTH=+$('cfgSubStrokeW').value;
-    d.SUBTITLE_POSITION_Y=+$('cfgSubPosY').value/100;d.SUBTITLE_MAX_CHARS=+$('cfgSubMax').value;
-  }
-  if(sec==='posting'){
-    d.YT_MAX_DIA=+$('cfgYTMax').value;d.YT_INTERVALO=+$('cfgYTInt').value;
-    d.YT_HORARIO_INICIO=$('cfgYTStart').value;d.YT_HORARIO_FIM=$('cfgYTEnd').value;
-    d.TT_MAX_DIA=+$('cfgTTMax').value;d.TT_INTERVALO=+$('cfgTTInt').value;
-    d.TT_HORARIO_INICIO=$('cfgTTStart').value;d.TT_HORARIO_FIM=$('cfgTTEnd').value;
-  }
-  try{const r=await fetch('/api/config/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
-    const j=await r.json();toast(j.ok?'Salvo!':'Erro: '+(j.error||'?'),j.ok?'s':'e');}
-  catch(e){toast('Erro','e');}
 }
 
-// Generate
-async function quickGen(){const t=$('quickTema').value.trim();if(!t)return;await api('/api/generate',{tema:t,plataformas:['youtube']});$('quickTema').value='';}
-async function generate(){
-  const t=$('genTema').value.trim();if(!t)return;
-  const p=[];if($('genYT').checked)p.push('youtube');if($('genTT').checked)p.push('tiktok');
-  await api('/api/generate',{tema:t,plataformas:p});
+// ===== TABS =====
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('[onclick*="'+tab+'"]').classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  if (tab === 'org') refreshOrg();
 }
-async function batch(){
-  const m=$('batchMode').value,p=[];
-  if($('batchYT').checked)p.push('youtube');if($('batchTT').checked)p.push('tiktok');
-  const d={mode:m,quantidade:+$('batchQtd').value,plataformas:p,inicio:$('batchInicio').value};
-  if(m==='preset')d.preset=$('batchPreset').value;
-  if(m==='serie')d.serie=$('batchSerie').value;
-  await api('/api/batch',d);
-}
-async function batchAct(a){await api('/api/batch/'+a,{});}
-async function runCmd(cmd){await api('/api/run_cmd',{cmd});}
-async function stopProc(){await fetch('/api/stop',{method:'POST'});}
 
-// TTS Test
-let ttsAudioObj=null;
-async function testTTS(){
-  const btn=$('btnTTSTest'), status=$('ttsStatus'), audio=$('ttsAudio');
-  const voice=$('cfgVoice').value, pitch=$('cfgPitch').value+'Hz', texto=$('ttsTestText').value.trim();
-  
-  btn.disabled=true; btn.textContent='⏳ Gerando...';
-  status.textContent='Conectando ao Edge TTS...'; status.style.color='var(--cyan)';
-  
-  try{
-    const resp=await fetch('/api/tts/test',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({voice, pitch, rate:'+0%', texto})
+// ===== CHAT =====
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  autoResize(e.target);
+}
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+function askSuggestion(q) {
+  document.getElementById('chatInput').value = q;
+  sendMessage();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const q = input.value.trim();
+  if (!q) return;
+
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+
+  const msgs = document.getElementById('messages');
+  msgs.insertAdjacentHTML('beforeend', '<div class="msg msg-user">' + escapeHtml(q) + '</div>');
+  msgs.insertAdjacentHTML('beforeend', '<div class="typing" id="typing"><span></span><span></span><span></span></div>');
+  msgs.scrollTop = msgs.scrollHeight;
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+
+  try {
+    const resp = await fetch('/api/ask', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({question: eli5Mode ? 'Explique de forma BEM simples, como se eu tivesse 5 anos, usando analogias do dia a dia: ' + q : q, history: chatHistory.slice(-10)})
     });
-    if(!resp.ok){const e=await resp.json();throw new Error(e.error||'Falhou');}
-    
-    const blob=await resp.blob();
-    const url=URL.createObjectURL(blob);
-    
-    if(ttsAudioObj){ttsAudioObj.pause();URL.revokeObjectURL(ttsAudioObj.src);}
-    ttsAudioObj=new Audio(url);
-    ttsAudioObj.onplay=()=>{status.textContent='▶ Reproduzindo...';status.style.color='var(--green)';$('btnTTSStop').style.display='';};
-    ttsAudioObj.onended=()=>{status.textContent='✅ Concluído';$('btnTTSStop').style.display='none';};
-    ttsAudioObj.onerror=()=>{status.textContent='❌ Erro ao reproduzir';status.style.color='var(--red)';};
-    ttsAudioObj.play();
-  }catch(e){
-    status.textContent='❌ '+e.message; status.style.color='var(--red)';
-  }finally{
-    btn.disabled=false; btn.textContent='🔊 Ouvir Voz';
+    const data = await resp.json();
+
+    document.getElementById('typing')?.remove();
+
+    chatHistory.push({role:'user', content:q});
+    chatHistory.push({role:'assistant', content:data.answer});
+
+    let sourcesHtml = '';
+    if (data.sources && data.sources.length) {
+      sourcesHtml = '<div style="margin-top:8px">';
+      data.sources.forEach(s => {
+        let cls = 'source-default';
+        if (s.book.toLowerCase().includes('guyton')) cls = 'source-guyton';
+        else if (s.book.toLowerCase().includes('silverthorn')) cls = 'source-silverthorn';
+        else if (s.book.toLowerCase().includes('porto')) cls = 'source-porto';
+        sourcesHtml += '<span class="source-pill '+cls+'">' + s.book.split(' - ')[0] + ', p.' + s.page + '</span>';
+      });
+      sourcesHtml += '</div>';
+    }
+
+    const msgId = 'msg-' + Date.now();
+    const html = '<div class="msg msg-ai" id="'+msgId+'">'
+      + formatAnswer(data.answer)
+      + sourcesHtml
+      + '<div class="msg-actions">'
+      + '<button class="msg-btn" onclick="copyMsg(\''+msgId+'\')">📋 Copiar</button>'
+      + '<button class="msg-btn" onclick="saveMsg(\''+msgId+'\',\''+escapeJs(q)+'\',\''+escapeJs(data.answer)+'\',\''+escapeJs(JSON.stringify(data.sources||[]))+'\')">💾 Salvar</button>'
+      + '<button class="msg-btn" onclick="toggleTTS(this,\''+msgId+'\')">🔊 Ouvir</button>'
+      + '<button class="msg-btn" onclick="eli5(\''+escapeJs(q)+'\')">🧒 Simplificar</button>'
+      + '<span class="provider-tag">' + (data.provider||'') + ' · ' + (data.time||0) + 's</span>'
+      + '</div></div>';
+
+    msgs.insertAdjacentHTML('beforeend', html);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    studyStats.questions++;
+    saveStats();
+    addHistory('chat', q);
+
+  } catch(err) {
+    document.getElementById('typing')?.remove();
+    msgs.insertAdjacentHTML('beforeend', '<div class="msg msg-ai" style="border-color:var(--red)">Erro de conexao. Verifique se o servidor esta rodando.</div>');
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  document.getElementById('sendBtn').disabled = false;
+}
+
+// ===== FLASHCARDS =====
+async function generateFlashcards() {
+  const topic = document.getElementById('flashTopic').value.trim();
+  if (!topic) return;
+
+  const btn = document.getElementById('flashBtn');
+  const container = document.getElementById('flashContainer');
+  btn.disabled = true;
+  btn.textContent = 'Gerando...';
+  container.innerHTML = '<div style="text-align:center;padding:40px"><div class="loading-spinner"></div> Gerando flashcards sobre "' + escapeHtml(topic) + '"...</div>';
+
+  try {
+    const resp = await fetch('/api/flashcards', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({topic: topic})
+    });
+    const data = await resp.json();
+
+    if (data.cards && data.cards.length > 0) {
+      let html = '<div class="flashcard-counter">' + data.cards.length + ' flashcards · Clique para virar</div>';
+      data.cards.forEach((card, i) => {
+        html += '<div class="flashcard" onclick="this.classList.toggle(\'flipped\')">'
+          + '<div class="flashcard-inner">'
+          + '<div class="flashcard-front">'
+          + '<div class="flashcard-label">Pergunta ' + (i+1) + '/' + data.cards.length + '</div>'
+          + '<div class="flashcard-text">' + escapeHtml(card.frente || '') + '</div>'
+          + '<div class="flashcard-hint">Toque para ver a resposta</div>'
+          + '</div>'
+          + '<div class="flashcard-back">'
+          + '<div class="flashcard-label">Resposta</div>'
+          + '<div class="flashcard-text">' + escapeHtml(card.verso || '') + '</div>'
+          + '<div class="flashcard-source">' + escapeHtml(card.livro||'') + (card.pagina ? ', p.'+card.pagina : '') + '</div>'
+          + '</div>'
+          + '</div></div>';
+      });
+      html += '<button class="study-btn" onclick="toggleTTS(this,null,\'' + escapeJs(data.cards.map(c=>c.frente+'. '+c.verso).join('. Proximo. ')) + '\')" style="margin-top:8px">🔊 Ouvir Todos</button>';
+      container.innerHTML = html;
+
+      studyStats.flashcards++;
+      saveStats();
+      addHistory('flash', topic);
+    } else {
+      container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Nao foi possivel gerar flashcards. Tente outro tema.</div></div>';
+    }
+  } catch(err) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Erro de conexao.</div></div>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Gerar';
+}
+
+// ===== QUIZ =====
+async function generateQuiz() {
+  const topic = document.getElementById('quizTopic').value.trim();
+  if (!topic) return;
+
+  const btn = document.getElementById('quizBtn');
+  const container = document.getElementById('quizContainer');
+  btn.disabled = true;
+  btn.textContent = 'Gerando...';
+  container.innerHTML = '<div style="text-align:center;padding:40px"><div class="loading-spinner"></div> Gerando quiz sobre "' + escapeHtml(topic) + '"...</div>';
+
+  try {
+    const resp = await fetch('/api/quiz', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({topic: topic})
+    });
+    const data = await resp.json();
+
+    if (data.questions && data.questions.length > 0) {
+      currentQuiz = {questions: data.questions, answers: new Array(data.questions.length).fill(-1), revealed: new Array(data.questions.length).fill(false), topic: topic};
+      renderQuiz();
+
+      studyStats.quizzes++;
+      saveStats();
+    } else {
+      container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Nao foi possivel gerar quiz. Tente outro tema.</div></div>';
+    }
+  } catch(err) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Erro de conexao.</div></div>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Gerar Quiz';
+}
+
+function renderQuiz() {
+  const container = document.getElementById('quizContainer');
+  const q = currentQuiz;
+  let html = '';
+
+  // Score
+  const answered = q.answers.filter(a => a >= 0).length;
+  const correct = q.answers.filter((a, i) => a === q.questions[i].correta).length;
+  if (answered > 0) {
+    html += '<div class="quiz-score"><div class="quiz-score-number">' + correct + '/' + q.questions.length + '</div><div class="quiz-score-label">' + (answered === q.questions.length ? 'Resultado Final' : 'Parcial') + '</div></div>';
+  }
+
+  q.questions.forEach((question, qi) => {
+    html += '<div class="quiz-card"><div class="quiz-number">Questao ' + (qi+1) + '/' + q.questions.length + '</div>';
+    html += '<div class="quiz-question">' + escapeHtml(question.pergunta || '') + '</div>';
+    html += '<div class="quiz-options">';
+
+    (question.alternativas || []).forEach((alt, ai) => {
+      let cls = 'quiz-option';
+      if (q.revealed[qi]) {
+        if (ai === question.correta) cls += ' correct';
+        else if (ai === q.answers[qi]) cls += ' wrong';
+      } else if (q.answers[qi] === ai) {
+        cls += ' selected';
+      }
+      const disabled = q.revealed[qi] ? 'style="pointer-events:none"' : '';
+      html += '<button class="' + cls + '" ' + disabled + ' onclick="selectQuizAnswer('+qi+','+ai+')">' + escapeHtml(alt) + '</button>';
+    });
+
+    html += '</div>';
+
+    if (q.revealed[qi] && question.explicacao) {
+      html += '<div class="quiz-explanation show">' + escapeHtml(question.explicacao)
+        + (question.livro ? '<div class="quiz-source">' + escapeHtml(question.livro) + (question.pagina ? ', p.'+question.pagina : '') + '</div>' : '')
+        + '</div>';
+    } else if (q.answers[qi] >= 0 && !q.revealed[qi]) {
+      html += '<button class="msg-btn" style="margin-top:8px" onclick="revealAnswer('+qi+')">Ver resposta</button>';
+    }
+
+    html += '</div>';
+  });
+
+  // Save result when all answered
+  if (answered === q.questions.length) {
+    const allRevealed = q.revealed.every(r => r);
+    if (!allRevealed) {
+      html += '<button class="study-btn" style="width:100%;margin-top:8px" onclick="revealAllAnswers()">Ver todas as respostas</button>';
+    }
+    addHistory('quiz', q.topic, correct + '/' + q.questions.length);
+  }
+
+  container.innerHTML = html;
+}
+
+function selectQuizAnswer(qi, ai) {
+  if (currentQuiz.revealed[qi]) return;
+  currentQuiz.answers[qi] = ai;
+  renderQuiz();
+}
+
+function revealAnswer(qi) {
+  currentQuiz.revealed[qi] = true;
+  renderQuiz();
+}
+
+function revealAllAnswers() {
+  currentQuiz.revealed = currentQuiz.revealed.map(() => true);
+  renderQuiz();
+}
+
+// ===== TTS =====
+function stopTTS() {
+  window.speechSynthesis.cancel();
+  document.querySelectorAll('.tts-active').forEach(b => b.classList.remove('tts-active'));
+  document.getElementById('ttsStopBtn').classList.remove('show');
+}
+
+function prepareForSpeech(text) {
+  let t = text;
+  // Remove markdown formatting
+  t = t.replace(/\*\*\*/g, '');
+  t = t.replace(/\*\*/g, '');
+  t = t.replace(/\*/g, '');
+  t = t.replace(/#{1,6}\s/g, '');
+  t = t.replace(/`{1,3}/g, '');
+  t = t.replace(/~~/g, '');
+  t = t.replace(/_/g, ' ');
+  // Remove bullets e listas
+  t = t.replace(/^\s*[-•]\s*/gm, '');
+  t = t.replace(/^\s*\d+\.\s*/gm, '');
+  // Remove colchetes e parenteses de referencias
+  t = t.replace(/\[([^\]]*)\]/g, '$1');
+  t = t.replace(/\(([^)]*)\)/g, '$1');
+  // Suaviza citacoes
+  t = t.replace(/Segundo /g, 'De acordo com ');
+  t = t.replace(/p\.\s*(\d+)/g, 'pagina $1');
+  t = t.replace(/pp\.\s*(\d+)/g, 'paginas $1');
+  t = t.replace(/cap\.\s*/gi, 'capitulo ');
+  t = t.replace(/fig\.\s*/gi, 'figura ');
+  t = t.replace(/ex\.\s*/gi, 'por exemplo ');
+  t = t.replace(/vs\./gi, 'versus');
+  t = t.replace(/etc\./g, 'etcetera');
+  // Adiciona pausas naturais
+  t = t.replace(/\. /g, '... ');
+  t = t.replace(/: /g, '... ');
+  t = t.replace(/; /g, '... ');
+  t = t.replace(/\n/g, '... ');
+  // Limpa espacos extras
+  t = t.replace(/\s+/g, ' ');
+  return t.trim();
+}
+
+function toggleTTS(btn, msgId, directText) {
+  if (window.speechSynthesis.speaking) {
+    stopTTS();
+    return;
+  }
+
+  let text = directText || '';
+  if (!text && msgId) {
+    const el = document.getElementById(msgId);
+    if (el) {
+      const clone = el.cloneNode(true);
+      clone.querySelectorAll('.msg-actions, .source-pill').forEach(e => e.remove());
+      text = clone.textContent.trim();
+    }
+  }
+
+  if (!text) return;
+
+  text = prepareForSpeech(text);
+
+  // Quebra em frases para soar mais natural
+  const sentences = text.split(/\.\.\./).filter(s => s.trim().length > 0);
+
+  let index = 0;
+  btn.classList.add('tts-active');
+  document.getElementById('ttsStopBtn').classList.add('show');
+
+  function speakNext() {
+    if (index >= sentences.length) {
+      btn.classList.remove('tts-active');
+      document.getElementById('ttsStopBtn').classList.remove('show');
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(sentences[index].trim());
+    utterance.lang = 'pt-BR';
+    utterance.rate = 0.88;
+    utterance.pitch = 1.15;
+    utterance.volume = 1;
+
+    // Prefere voz feminina pt-BR (soa mais como professora)
+    const voices = window.speechSynthesis.getVoices();
+    const ptFemale = voices.find(v => v.lang.startsWith('pt') && v.name.toLowerCase().includes('female'))
+      || voices.find(v => v.lang.startsWith('pt-BR') && (v.name.includes('Francisca') || v.name.includes('Maria') || v.name.includes('Luciana') || v.name.includes('Fernanda')))
+      || voices.find(v => v.lang === 'pt-BR')
+      || voices.find(v => v.lang.startsWith('pt'))
+      || voices[0];
+    if (ptFemale) utterance.voice = ptFemale;
+
+    utterance.onend = () => {
+      index++;
+      // Pausa entre frases pra soar natural
+      setTimeout(speakNext, 300);
+    };
+    utterance.onerror = () => {
+      btn.classList.remove('tts-active');
+      document.getElementById('ttsStopBtn').classList.remove('show');
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  speakNext();
+}
+
+// Load voices
+window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+// Pre-load
+setTimeout(() => window.speechSynthesis.getVoices(), 100);
+
+// ===== SAVED =====
+function toggleSaved() {
+  document.getElementById('savedOverlay').classList.toggle('show');
+  document.getElementById('savedPanel').classList.toggle('show');
+  renderSaved();
+}
+
+function saveMsg(msgId, q, answer, sourcesJson) {
+  const sources = JSON.parse(sourcesJson || '[]');
+  savedItems.push({q, answer, sources, date: new Date().toLocaleString('pt-BR')});
+  localStorage.setItem('medicrg_saved', JSON.stringify(savedItems));
+  updateSavedBadge();
+
+  const btn = document.querySelector('#' + msgId + ' .msg-btn:nth-child(2)');
+  if (btn) { btn.textContent = '✅ Salvo!'; setTimeout(() => btn.textContent = '💾 Salvar', 1500); }
+}
+
+function copyMsg(msgId) {
+  const el = document.getElementById(msgId);
+  if (!el) return;
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll('.msg-actions').forEach(e => e.remove());
+  navigator.clipboard.writeText(clone.textContent.trim());
+
+  const btn = el.querySelector('.msg-btn');
+  if (btn) { btn.textContent = '✅ Copiado!'; setTimeout(() => btn.textContent = '📋 Copiar', 1500); }
+}
+
+function renderSaved() {
+  const list = document.getElementById('savedList');
+  if (!savedItems.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-state-text">Nenhuma resposta salva ainda</div></div>';
+    return;
+  }
+  list.innerHTML = savedItems.map((item, i) =>
+    '<div class="saved-item"><button class="saved-item-del" onclick="deleteSaved('+i+')">✕</button>'
+    + '<div class="saved-item-q">' + escapeHtml(item.q) + '</div>'
+    + '<div class="saved-item-a">' + escapeHtml(item.answer) + '</div></div>'
+  ).join('');
+}
+
+function deleteSaved(i) {
+  savedItems.splice(i, 1);
+  localStorage.setItem('medicrg_saved', JSON.stringify(savedItems));
+  updateSavedBadge();
+  renderSaved();
+}
+
+function exportSaved() {
+  let text = '══════════════════════════════════════\n  MEDIC.RG — Respostas Salvas\n  Exportado em: ' + new Date().toLocaleString('pt-BR') + '\n══════════════════════════════════════\n\n';
+  savedItems.forEach((item, i) => {
+    text += '━━━ Pergunta ' + (i+1) + ' (' + item.date + ') ━━━\n' + item.q + '\n\n' + item.answer + '\n\n';
+    if (item.sources && item.sources.length) {
+      text += 'Fontes: ' + item.sources.map(s => s.book + ', p.' + s.page).join(' | ') + '\n';
+    }
+    text += '\n';
+  });
+  const blob = new Blob([text], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'medicrg_salvos_' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click();
+}
+
+function updateSavedBadge() {
+  const badge = document.getElementById('savedBadge');
+  if (savedItems.length > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = savedItems.length;
+  } else {
+    badge.style.display = 'none';
   }
 }
-function stopTTS(){if(ttsAudioObj){ttsAudioObj.pause();ttsAudioObj.currentTime=0;}$('ttsStatus').textContent='Parado';$('btnTTSStop').style.display='none';}
-async function openOutput(){await fetch('/api/output/open',{method:'POST'});}
-async function clearLogs(){await fetch('/api/logs/clear',{method:'POST'});document.querySelectorAll('.terminal').forEach(t=>t.innerHTML='');}
 
-async function api(url,data){
-  try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-    const j=await r.json();toast(j.error||'Iniciado!',j.error?'e':'s');}
-  catch(e){toast('Erro','e');}
+// ===== ORGANIZATION =====
+function addHistory(type, topic, score) {
+  const existing = studyHistory.find(h => h.topic === topic && h.type === type);
+  if (existing) {
+    existing.date = new Date().toLocaleString('pt-BR');
+    existing.count = (existing.count || 1) + 1;
+    if (score) existing.score = score;
+  } else {
+    studyHistory.unshift({type, topic, date: new Date().toLocaleString('pt-BR'), count: 1, score: score || null});
+  }
+  if (studyHistory.length > 50) studyHistory = studyHistory.slice(0, 50);
+  localStorage.setItem('medicrg_history', JSON.stringify(studyHistory));
 }
 
-// Analytics
-async function loadAn(){
-  try{const r=await fetch('/api/analytics');const d=await r.json();
-    $('anVids').textContent=d.total_videos||0;$('anSize').textContent=(d.total_size_mb||0)+' MB';
-    $('anAvg').textContent=(d.avg_size_mb||0)+' MB';$('anTemas').textContent=d.total_temas||0;
-    $('statTemas').textContent=d.total_temas||0;
-    const daily=d.daily||[],mx=Math.max(...daily.map(x=>x.value),1);
-    $('chartD').innerHTML=daily.map(x=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:10px;color:var(--text-dim)">${x.value||''}</span><div style="width:100%;background:${x.value?'var(--cyan)':'var(--bg-input)'};height:${Math.max(4,x.value/mx*100)}px;border-radius:3px"></div><span style="font-size:9px;color:var(--text-muted)">${x.label}</span></div>`).join('');
-    const t=d.recent_temas||[];
-    $('recTemas').innerHTML=t.length?t.map(x=>`<div style="padding:5px 0;border-bottom:1px solid var(--border)"><span>${x.tema}</span><span style="color:var(--text-muted);font-size:11px;margin-left:8px">${x.preset||''}</span></div>`).join(''):'<div style="color:var(--text-muted)">Nenhum</div>';
-  }catch(e){}
+function saveStats() {
+  localStorage.setItem('medicrg_stats', JSON.stringify(studyStats));
 }
 
-// Pipeline UI
-function updPipe(step,running){
-  document.querySelectorAll('.step').forEach(s=>{const n=+s.dataset.step;s.className='step';if(n<step)s.classList.add('done');else if(n===step&&running)s.classList.add('active');});
-  $('stepLabel').textContent=step===0?'Pipeline ocioso':step>=6?'✅ Concluído!':ST.step_label||'Etapa '+step+'/5';
+function refreshOrg() {
+  document.getElementById('statQuestions').textContent = studyStats.questions;
+  document.getElementById('statFlash').textContent = studyStats.flashcards;
+  document.getElementById('statQuiz').textContent = studyStats.quizzes;
+
+  // Books
+  fetch('/api/topics').then(r => r.json()).then(data => {
+    const list = document.getElementById('booksList');
+    if (data.books && data.books.length) {
+      list.innerHTML = data.books.map(b =>
+        '<div class="book-item"><span class="book-name">' + escapeHtml(b.name) + '</span><span class="book-chunks">' + b.chunks + ' trechos</span></div>'
+      ).join('');
+    } else {
+      list.innerHTML = '<div class="empty-state-text">Nenhum livro carregado</div>';
+    }
+  }).catch(() => {});
+
+  // History
+  const histList = document.getElementById('historyList');
+  if (!studyHistory.length) {
+    histList.innerHTML = '<div class="empty-state-text">Nenhum estudo registrado ainda</div>';
+    return;
+  }
+  histList.innerHTML = studyHistory.slice(0, 20).map(h => {
+    let typeClass = h.type === 'chat' ? 'chat' : h.type === 'flash' ? 'flash' : 'quiz';
+    let typeLabel = h.type === 'chat' ? 'Chat' : h.type === 'flash' ? 'Flash' : 'Quiz';
+    let scoreHtml = h.score ? '<span class="history-score" style="color:var(--accent)">' + h.score + '</span>' : '';
+    return '<div class="history-item">'
+      + '<span class="history-topic">' + escapeHtml(h.topic.substring(0,40)) + (h.topic.length > 40 ? '...' : '') + '</span>'
+      + '<span class="history-type ' + typeClass + '">' + typeLabel + '</span>'
+      + scoreHtml
+      + '<span class="history-date">' + h.date.split(' ')[0] + '</span>'
+      + '</div>';
+  }).join('');
 }
 
-// SSE
-function connectSSE(){
-  if(sse)sse.close();
-  sse=new EventSource('/api/logs/stream');
-  sse.onmessage=e=>{try{const d=JSON.parse(e.data);
-    if(d.type==='heartbeat')return;
-    if(d.type==='status'){const s=d.status;ST.step=s.step;ST.step_label=s.label;ST.running=s.running;
-      updPipe(s.step,s.running);
-      $('statusDot').className='status-dot '+(s.running?'on':'off');
-      $('statusText').textContent=s.running?(s.label||'...'):'Ocioso';return;}
-    addLog(d);}catch(x){}};
-  sse.onerror=()=>setTimeout(connectSSE,3000);
+function clearHistory() {
+  if (confirm('Limpar todo o historico de estudo?')) {
+    studyHistory = [];
+    studyStats = {questions:0, flashcards:0, quizzes:0};
+    localStorage.setItem('medicrg_history', JSON.stringify(studyHistory));
+    saveStats();
+    refreshOrg();
+  }
 }
-function addLog(e){
-  document.querySelectorAll('.terminal').forEach(t=>{
-    const d=document.createElement('div');
-    d.innerHTML=`<span class="log-time">${e.time||''}</span><span class="log-${e.type||'log'}">${esc(e.msg||'')}</span>`;
-    t.appendChild(d);t.scrollTop=t.scrollHeight;
-    while(t.children.length>500)t.removeChild(t.firstChild);
-  });
-}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function toast(m,t){const e=$('toast');e.textContent=(t==='s'?'✅ ':'❌ ')+m;e.className='toast show';setTimeout(()=>e.classList.remove('show'),3000);}
 
-loadState();loadAn();connectSSE();
+// ===== PROVIDERS =====
+function toggleProviders() {
+  const existing = document.getElementById('providerPanel');
+  if (existing) { existing.remove(); return; }
+
+  fetch('/api/providers').then(r => r.json()).then(data => {
+    let html = '<div id="providerPanel" style="padding:8px 20px"><div style="display:flex;flex-wrap:wrap;gap:6px">';
+    data.forEach(p => {
+      const color = p.available ? 'var(--green)' : 'var(--red)';
+      html += '<span style="padding:4px 8px;border-radius:6px;font-size:11px;border:1px solid '+color+';color:'+color+'">'
+        + (p.available ? '✓' : '✗') + ' ' + p.name + '</span>';
+    });
+    html += '</div></div>';
+    document.querySelector('.toolbar').insertAdjacentHTML('afterend', html);
+    setTimeout(() => document.getElementById('providerPanel')?.remove(), 5000);
+  }).catch(() => {});
+}
+
+// ===== ELI5 =====
+function eli5(originalQuestion) {
+  document.getElementById('chatInput').value = 'Explique de forma BEM simples, como se eu tivesse 5 anos de idade, usando analogias do dia a dia e linguagem facil: ' + originalQuestion;
+  sendMessage();
+}
+
+// ===== UTILS =====
+function escapeHtml(t) { return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escapeJs(t) { return (t||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n'); }
+function formatAnswer(text) {
+  if (!text) return '';
+  return text.split('\n').map(line => {
+    if (line.trim() === '') return '';
+    return '<p>' + escapeHtml(line) + '</p>';
+  }).join('');
+}
+
+// ===== INIT =====
+updateSavedBadge();
 </script>
 </body>
 </html>
