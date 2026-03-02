@@ -163,8 +163,9 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);touc
 .clear-history-btn:hover{border-color:var(--red);color:var(--red)}
 
 /* ===== MINDMAP ===== */
-.mindmap-wrapper{flex:1;overflow:auto;padding:0 12px 20px;-webkit-overflow-scrolling:touch}
-.mindmap-canvas{position:relative;margin:0 auto}
+.mindmap-wrapper{flex:1;overflow:auto;padding:0 12px 20px;-webkit-overflow-scrolling:touch;cursor:grab}
+.mindmap-wrapper:active{cursor:grabbing}
+.mindmap-canvas{position:relative;margin:0 auto;transition:transform .1s}
 
 .mm-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10;text-align:center}
 .mm-center-inner{padding:18px 30px;border-radius:24px;background:linear-gradient(135deg,#0a2a2a,#0d1f2d);border:2px solid var(--accent);font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--accent);box-shadow:0 0 40px rgba(0,229,200,.25),0 0 80px rgba(0,229,200,.08),inset 0 1px 0 rgba(255,255,255,.05);animation:mmPulse 3s ease-in-out infinite;max-width:220px;word-wrap:break-word}
@@ -173,22 +174,35 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);touc
 .mm-branch{position:absolute;z-index:5;animation:mmBranchIn .6s ease backwards}
 @keyframes mmBranchIn{from{opacity:0;transform:translate(var(--tx),var(--ty)) scale(.7)}to{opacity:1;transform:translate(var(--tx),var(--ty)) scale(1)}}
 
-.mm-branch-title{padding:10px 18px;border-radius:14px;font-size:13px;font-weight:600;text-align:center;cursor:default;position:relative;overflow:hidden;letter-spacing:.3px;transition:transform .2s}
-.mm-branch-title:hover{transform:scale(1.05)}
+.mm-branch-title{padding:10px 18px;border-radius:14px;font-size:13px;font-weight:600;text-align:center;cursor:pointer;position:relative;overflow:hidden;letter-spacing:.3px;transition:transform .2s,box-shadow .2s;user-select:none}
+.mm-branch-title:hover{transform:scale(1.08);box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.mm-branch-title:active{transform:scale(.97)}
 .mm-branch-title::before{content:'';position:absolute;inset:0;border-radius:14px;opacity:.08;background:radial-gradient(circle at 30% 30%,#fff,transparent)}
+.mm-branch-title .mm-toggle{display:inline-block;margin-left:6px;font-size:10px;transition:transform .3s}
+.mm-branch-title .mm-toggle.open{transform:rotate(180deg)}
 
-.mm-items{display:flex;flex-direction:column;gap:5px;margin-top:8px}
-.mm-item{padding:7px 12px;border-radius:10px;font-size:11.5px;background:rgba(13,21,32,.85);backdrop-filter:blur(8px);border:1px solid;color:var(--text);line-height:1.45;max-width:185px;word-wrap:break-word;transition:transform .15s,border-color .2s;cursor:default}
-.mm-item:hover{transform:translateX(3px)}
+.mm-items{display:flex;flex-direction:column;gap:5px;margin-top:8px;overflow:hidden;transition:max-height .4s ease,opacity .3s ease}
+.mm-items.collapsed{max-height:0 !important;opacity:0;margin-top:0}
+
+.mm-item{padding:7px 12px;border-radius:10px;font-size:11.5px;background:rgba(13,21,32,.85);backdrop-filter:blur(8px);border:1px solid;color:var(--text);line-height:1.45;max-width:185px;word-wrap:break-word;transition:transform .15s,border-color .2s,background .2s;cursor:pointer;user-select:none}
+.mm-item:hover{transform:translateX(3px);background:rgba(20,30,50,.9)}
+.mm-item:active{transform:scale(.97)}
+
+.mm-item-tooltip{position:fixed;z-index:100;padding:12px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--accent);color:var(--text);font-size:12px;max-width:280px;line-height:1.5;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:none;animation:mmTipIn .2s ease}
+@keyframes mmTipIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+.mm-item-actions{display:flex;gap:4px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.mm-item-action{padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--accent);font-size:11px;cursor:pointer;font-family:'Outfit',sans-serif;pointer-events:auto;transition:background .2s}
+.mm-item-action:hover{background:rgba(0,229,200,.1)}
 
 .mm-svg-lines{position:absolute;left:0;top:0;z-index:1;pointer-events:none}
 
 .mm-sources{text-align:center;padding:12px;font-size:11px;color:var(--text-dim);margin-top:8px}
 .mm-actions{display:flex;gap:8px;justify-content:center;margin-top:12px;padding-bottom:12px}
 
-/* Glow dots on lines */
-.mm-dot{animation:mmDotMove 2s linear infinite}
-@keyframes mmDotMove{0%{offset-distance:0%}100%{offset-distance:100%}}
+.mm-zoom-controls{display:flex;gap:4px;justify-content:center;margin-bottom:8px}
+.mm-zoom-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s}
+.mm-zoom-btn:hover{border-color:var(--accent)}
 
 .books-list{display:flex;flex-direction:column;gap:8px}
 .book-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border)}
@@ -984,21 +998,18 @@ function renderMindmap(mm, sources, provider, time) {
   const numRamos = ramos.length;
   if (!numRamos) { container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Nao foi possivel gerar o mapa.</div></div>'; return; }
 
-  // Layout calculations
+  window.currentMindmapData = mm;
+
   const canvasW = Math.max(750, numRamos * 210);
   const canvasH = Math.max(550, numRamos * 130);
   const cx = canvasW / 2;
   const cy = canvasH / 2;
   const radius = Math.min(canvasW, canvasH) * 0.33;
 
-  // SVG with curved lines + glow
   let svgDefs = '<defs>';
   ramos.forEach((r, i) => {
     const cor = r.cor || '#00e5c8';
-    svgDefs += '<linearGradient id="grad'+i+'" x1="0%" y1="0%" x2="100%" y2="0%">'
-      + '<stop offset="0%" stop-color="'+cor+'" stop-opacity="0.6"/>'
-      + '<stop offset="100%" stop-color="'+cor+'" stop-opacity="0.15"/>'
-      + '</linearGradient>';
+    svgDefs += '<linearGradient id="grad'+i+'" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="'+cor+'" stop-opacity="0.6"/><stop offset="100%" stop-color="'+cor+'" stop-opacity="0.15"/></linearGradient>';
     svgDefs += '<filter id="glow'+i+'"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
   });
   svgDefs += '</defs>';
@@ -1011,82 +1022,87 @@ function renderMindmap(mm, sources, provider, time) {
     const angle = (i / numRamos) * 2 * Math.PI - Math.PI / 2;
     const bx = cx + radius * Math.cos(angle);
     const by = cy + radius * Math.sin(angle);
-
-    // Curved bezier line from center to branch
     const midX = (cx + bx) / 2;
     const midY = (cy + by) / 2;
-    // Offset control point perpendicular to line
-    const dx = bx - cx;
-    const dy = by - cy;
+    const dx = bx - cx; const dy = by - cy;
     const len = Math.sqrt(dx*dx + dy*dy) || 1;
-    const perpX = -dy / len * 30;
-    const perpY = dx / len * 30;
-    const cpx = midX + perpX;
-    const cpy = midY + perpY;
+    const cpx = midX + (-dy / len * 30);
+    const cpy = midY + (dx / len * 30);
 
-    svgPaths += '<path d="M'+cx+','+cy+' Q'+cpx+','+cpy+' '+bx+','+by+'" fill="none" stroke="url(#grad'+i+')" stroke-width="2.5" filter="url(#glow'+i+')" stroke-linecap="round">';
-    svgPaths += '<animate attributeName="stroke-dasharray" from="0,1000" to="1000,0" dur="1.2s" fill="freeze" begin="'+(i*0.15)+'s"/>';
-    svgPaths += '</path>';
+    svgPaths += '<path d="M'+cx+','+cy+' Q'+cpx+','+cpy+' '+bx+','+by+'" fill="none" stroke="url(#grad'+i+')" stroke-width="2.5" filter="url(#glow'+i+')" stroke-linecap="round"><animate attributeName="stroke-dasharray" from="0,1000" to="1000,0" dur="1.2s" fill="freeze" begin="'+(i*0.15)+'s"/></path>';
+    svgPaths += '<circle cx="'+bx+'" cy="'+by+'" r="4" fill="'+cor+'" opacity="0.6"><animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/></circle>';
 
-    // Small circle at branch endpoint
-    svgPaths += '<circle cx="'+bx+'" cy="'+by+'" r="4" fill="'+cor+'" opacity="0.6"><animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite" begin="'+(i*0.2)+'s"/></circle>';
-
-    // Items
-    const itemsHtml = (ramo.itens || []).map(item =>
-      '<div class="mm-item" style="border-color:'+cor+'33;border-left:3px solid '+cor+'66">' + escapeHtml(item) + '</div>'
+    const itemsHtml = (ramo.itens || []).map((item, j) =>
+      '<div class="mm-item" style="border-color:'+cor+'33;border-left:3px solid '+cor+'66" onclick="mmItemClick(event,'+i+','+j+')">' + escapeHtml(item) + '</div>'
     ).join('');
 
-    // Position branch: left or right of center
     const isLeft = bx < cx;
     const txVal = isLeft ? '-100%' : '0%';
     const itemAlign = isLeft ? 'align-items:flex-end' : 'align-items:flex-start';
     const titleAlign = isLeft ? 'margin-left:auto' : 'margin-right:auto';
     const delay = (i * 0.1 + 0.3);
+    const maxH = (ramo.itens || []).length * 40 + 20;
 
     branchesHtml += '<div class="mm-branch" style="left:'+bx+'px;top:'+by+'px;--tx:'+txVal+';--ty:-50%;transform:translate('+txVal+',-50%);animation-delay:'+delay+'s">'
-      + '<div class="mm-branch-title" style="background:'+cor+'18;border:1.5px solid '+cor+'55;color:'+cor+';'+titleAlign+'">' + escapeHtml(ramo.titulo || '') + '</div>'
-      + '<div class="mm-items" style="'+itemAlign+'">' + itemsHtml + '</div>'
-      + '</div>';
+      + '<div class="mm-branch-title" style="background:'+cor+'18;border:1.5px solid '+cor+'55;color:'+cor+';'+titleAlign+'" onclick="mmToggleBranch(this,'+i+')">'
+      + escapeHtml(ramo.titulo || '') + ' <span class="mm-toggle open">&#9660;</span></div>'
+      + '<div class="mm-items" id="mmItems'+i+'" style="'+itemAlign+';max-height:'+maxH+'px">' + itemsHtml + '</div></div>';
   });
 
   const svg = '<svg class="mm-svg-lines" width="'+canvasW+'" height="'+canvasH+'">' + svgDefs + svgPaths + '</svg>';
-
-  // Sources
-  let sourcesHtml = '';
-  if (sources && sources.length) {
-    sourcesHtml = '<div class="mm-sources">Fontes: ' + sources.map(s => escapeHtml(s.book) + (s.page ? ', p.'+s.page : '')).join(' | ') + ' &middot; ' + (provider||'') + ' &middot; ' + (time||0) + 's</div>';
-  }
-
-  // Audio text
+  let sourcesHtml = (sources && sources.length) ? '<div class="mm-sources">Fontes: ' + sources.map(s => escapeHtml(s.book) + (s.page ? ', p.'+s.page : '')).join(' | ') + '</div>' : '';
   const audioText = mm.centro + '. ' + ramos.map(r => r.titulo + ': ' + (r.itens||[]).join(', ')).join('. ');
 
-  container.innerHTML = '<div class="mindmap-canvas" style="width:'+canvasW+'px;height:'+canvasH+'px;min-width:'+canvasW+'px">'
-    + svg
-    + '<div class="mm-center"><div class="mm-center-inner">' + escapeHtml(mm.centro) + '</div></div>'
-    + branchesHtml
+  container.innerHTML = '<div class="mm-zoom-controls">'
+    + '<button class="mm-zoom-btn" onclick="mmZoom(-1)">-</button>'
+    + '<button class="mm-zoom-btn" onclick="mmZoom(0)">&#8634;</button>'
+    + '<button class="mm-zoom-btn" onclick="mmZoom(1)">+</button>'
+    + '<button class="mm-zoom-btn" onclick="mmExpandAll()" title="Expandir">&#9744;</button>'
+    + '<button class="mm-zoom-btn" onclick="mmCollapseAll()" title="Recolher">&#9634;</button>'
     + '</div>'
-    + sourcesHtml
-    + '<div class="mm-actions">'
-    + '<button class="msg-btn" onclick="exportMindmapImage()">📸 Salvar Imagem</button>'
-    + '<button class="msg-btn" onclick="toggleTTS(this,null,\'' + escapeJs(audioText) + '\')">🔊 Ouvir</button>'
-    + '</div>';
+    + '<div class="mindmap-canvas" id="mmCanvas" style="width:'+canvasW+'px;height:'+canvasH+'px;min-width:'+canvasW+'px">'
+    + svg + '<div class="mm-center"><div class="mm-center-inner" onclick="mmCenterClick()" style="cursor:pointer">' + escapeHtml(mm.centro) + '</div></div>'
+    + branchesHtml + '</div>' + sourcesHtml
+    + '<div class="mm-actions"><button class="msg-btn" onclick="toggleTTS(this,null,\'' + escapeJs(audioText) + '\')">&#128266; Ouvir Tudo</button></div>';
+  window.mmZoomLevel = 1;
 }
 
-function exportMindmapImage() {
-  const canvas = document.querySelector('.mindmap-canvas');
-  if (!canvas) return;
-  // Usa html2canvas se disponivel, senao informa
-  if (typeof html2canvas !== 'undefined') {
-    html2canvas(canvas, {backgroundColor: '#060b14'}).then(c => {
-      const a = document.createElement('a');
-      a.href = c.toDataURL('image/png');
-      a.download = 'medicrg-mapa-mental.png';
-      a.click();
-    });
-  } else {
-    alert('Para salvar como imagem, faca um print da tela (tecla Print Screen ou Win+Shift+S)');
-  }
+function mmToggleBranch(el, idx) {
+  var items = document.getElementById('mmItems' + idx);
+  var tog = el.querySelector('.mm-toggle');
+  if (!items) return;
+  items.classList.toggle('collapsed');
+  if (tog) tog.classList.toggle('open');
 }
+function mmExpandAll() { document.querySelectorAll('.mm-items').forEach(function(el){el.classList.remove('collapsed')}); document.querySelectorAll('.mm-toggle').forEach(function(el){el.classList.add('open')}); }
+function mmCollapseAll() { document.querySelectorAll('.mm-items').forEach(function(el){el.classList.add('collapsed')}); document.querySelectorAll('.mm-toggle').forEach(function(el){el.classList.remove('open')}); }
+
+function mmItemClick(event, bi, ii) {
+  event.stopPropagation();
+  document.querySelectorAll('.mm-item-tooltip').forEach(function(t){t.remove()});
+  var mm = window.currentMindmapData; if (!mm) return;
+  var ramo = mm.ramos[bi]; var item = ramo.itens[ii]; var cor = ramo.cor || '#00e5c8';
+  var tip = document.createElement('div');
+  tip.className = 'mm-item-tooltip'; tip.style.borderColor = cor;
+  tip.innerHTML = '<strong style="color:'+cor+'">' + escapeHtml(item) + '</strong>'
+    + '<div style="color:#7a8ba0;margin-top:4px;font-size:11px">De: ' + escapeHtml(ramo.titulo) + '</div>'
+    + '<div class="mm-item-actions">'
+    + '<button class="mm-item-action" onclick="mmGoChat(\'' + escapeJs(item) + '\')">&#128172; Chat</button>'
+    + '<button class="mm-item-action" onclick="mmGoFlash(\'' + escapeJs(item) + '\')">&#127183; Flash</button>'
+    + '<button class="mm-item-action" onclick="mmGoQuiz(\'' + escapeJs(item) + '\')">&#128221; Quiz</button></div>';
+  document.body.appendChild(tip);
+  var r = event.target.getBoundingClientRect();
+  tip.style.top = Math.min(r.bottom + 8, window.innerHeight - 160) + 'px';
+  tip.style.left = Math.max(10, Math.min(r.left, window.innerWidth - 290)) + 'px';
+  setTimeout(function(){ document.addEventListener('click', function fn(e){ if(!tip.contains(e.target)){tip.remove();document.removeEventListener('click',fn)} }); }, 50);
+}
+function mmGoChat(t) { document.querySelectorAll('.mm-item-tooltip').forEach(function(x){x.remove()}); switchTab('chat'); document.getElementById('chatInput').value = 'Explique detalhadamente: ' + t; sendMessage(); }
+function mmGoFlash(t) { document.querySelectorAll('.mm-item-tooltip').forEach(function(x){x.remove()}); switchTab('flashcards'); document.getElementById('flashTopic').value = t; generateFlashcards(); }
+function mmGoQuiz(t) { document.querySelectorAll('.mm-item-tooltip').forEach(function(x){x.remove()}); switchTab('quiz'); document.getElementById('quizTopic').value = t; generateQuiz(); }
+function mmCenterClick() { var mm = window.currentMindmapData; if(!mm)return; toggleTTS(document.querySelector('.mm-center-inner'), null, mm.centro + '. Subtemas: ' + mm.ramos.map(function(r){return r.titulo}).join(', ')); }
+function mmZoom(dir) { var c = document.getElementById('mmCanvas'); if(!c)return; if(dir===0) window.mmZoomLevel=1; else window.mmZoomLevel = Math.max(0.5, Math.min(1.5, (window.mmZoomLevel||1) + dir*0.15)); c.style.transform='scale('+window.mmZoomLevel+')'; c.style.transformOrigin='center center'; }
+
+function exportMindmapImage() { alert('Use Win+Shift+S para capturar o mapa mental'); }
 
 // ===== UTILS =====
 function escapeHtml(t) { return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
