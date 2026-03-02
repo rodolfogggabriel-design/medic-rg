@@ -38,6 +38,49 @@ REGRAS:
 CONTEXTO DOS LIVROS:
 """
 
+FLASHCARD_PROMPT = """Com base EXCLUSIVAMENTE no contexto dos livros fornecido abaixo, gere exatamente 5 flashcards sobre o tema solicitado.
+
+FORMATO OBRIGATORIO (responda APENAS com este JSON, sem texto antes ou depois):
+[
+  {"frente": "pergunta clara e objetiva", "verso": "resposta concisa baseada nos livros", "livro": "nome do livro", "pagina": "numero"},
+  {"frente": "...", "verso": "...", "livro": "...", "pagina": "..."}
+]
+
+REGRAS:
+- Use APENAS informacoes presentes no contexto
+- Perguntas devem testar conhecimento medico real
+- Respostas devem ser concisas mas completas
+- Cite o livro e pagina de onde veio a informacao
+- Responda em portugues brasileiro
+
+CONTEXTO DOS LIVROS:
+"""
+
+QUIZ_PROMPT = """Com base EXCLUSIVAMENTE no contexto dos livros fornecido abaixo, gere exatamente 5 questoes de multipla escolha sobre o tema solicitado.
+
+FORMATO OBRIGATORIO (responda APENAS com este JSON, sem texto antes ou depois):
+[
+  {
+    "pergunta": "texto da pergunta",
+    "alternativas": ["a) ...", "b) ...", "c) ...", "d) ..."],
+    "correta": 0,
+    "explicacao": "explicacao da resposta correta citando o livro",
+    "livro": "nome do livro",
+    "pagina": "numero"
+  }
+]
+
+REGRAS:
+- Use APENAS informacoes presentes no contexto
+- Questoes devem ter 4 alternativas (a, b, c, d)
+- "correta" e o indice da alternativa correta (0=a, 1=b, 2=c, 3=d)
+- Alternativas incorretas devem ser plausíveis mas claramente erradas
+- Explicacao deve citar o livro e pagina
+- Responda em portugues brasileiro
+
+CONTEXTO DOS LIVROS:
+"""
+
 
 def load_knowledge_base():
     global knowledge_base
@@ -90,7 +133,6 @@ def search_similar_chunks(query_embedding, top_k=TOP_K):
 
 
 def keyword_search(query, top_k=TOP_K):
-    """Busca por palavras-chave quando embedding nao esta disponivel."""
     if not knowledge_base or not knowledge_base["chunks"]:
         return []
 
@@ -157,10 +199,60 @@ def get_query_embedding(query):
                 print("Gemini embedding status: " + str(resp.status_code))
         except Exception as e:
             print("Gemini embedding falhou: " + str(e))
-
     return None
 
 
+def get_context_for_topic(topic, top_k=4):
+    """Busca contexto relevante para um topico (usado por flashcards e quiz)."""
+    query_emb = get_query_embedding(topic)
+    if query_emb is not None:
+        results = search_similar_chunks(query_emb, top_k=top_k)
+    else:
+        results = keyword_search(topic, top_k=top_k)
+
+    if not results:
+        return "", []
+
+    context_parts = []
+    for i, chunk in enumerate(results, 1):
+        context_parts.append("[Trecho " + str(i) + " - " + chunk['book'] + ", p." + str(chunk['page']) + "]\n" + chunk['text'])
+    context = "\n\n---\n\n".join(context_parts)[:3000]
+
+    sources = []
+    seen = set()
+    for r in results:
+        key = r['book'] + "-p" + str(r['page'])
+        if key not in seen:
+            sources.append({"book": r["book"], "page": r["page"]})
+            seen.add(key)
+    return context, sources
+
+
+def parse_json_response(text):
+    """Tenta extrair JSON de uma resposta da API."""
+    text = text.strip()
+    # Remove markdown code blocks
+    text = re.sub(r'^```json\s*', '', text)
+    text = re.sub(r'^```\s*', '', text)
+    text = re.sub(r'\s*```$', '', text)
+    text = text.strip()
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Tenta encontrar array JSON no texto
+        match = re.search(r'\[.*\]', text, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group())
+            except json.JSONDecodeError:
+                pass
+    return None
+
+
+# =============================================
+# ROTAS
+# =============================================
 @app.route("/")
 def index():
     books = knowledge_base.get("books", []) if knowledge_base else []
@@ -179,7 +271,6 @@ def ask():
 
     start = time.time()
 
-    # Tenta embedding via Gemini, senao usa busca por palavras-chave
     query_emb = get_query_embedding(question)
     if query_emb is not None:
         results = search_similar_chunks(query_emb, top_k=TOP_K)
@@ -227,6 +318,97 @@ def ask():
         "provider": response["provider"],
         "fallback": response["fallback"]
     })
+
+
+@app.route("/api/flashcards", methods=["POST"])
+def flashcards():
+    data = request.json
+    topic = data.get("topic", "").strip()
+
+    if not topic:
+        return jsonify({"error": "Tema vazio"}), 400
+
+    start = time.time()
+
+    context, sources = get_context_for_topic(topic, top_k=4)
+    if not context:
+        return jsonify({
+            "error": "Nao encontrei conteudo sobre esse tema nos livros.",
+            "cards": []
+        })
+
+    system_prompt = FLASHCARD_PROMPT + context[:2000]
+    messages = [{"role": "user", "content": "Gere 5 flashcards sobre: " + topic}]
+
+    response = api_manager.generate(system_prompt, messages)
+
+    cards = parse_json_response(response["text"])
+    if cards is None:
+        cards = []
+
+    elapsed = time.time() - start
+
+    return jsonify({
+        "cards": cards,
+        "sources": sources,
+        "time": round(elapsed, 2),
+        "provider": response["provider"]
+    })
+
+
+@app.route("/api/quiz", methods=["POST"])
+def quiz():
+    data = request.json
+    topic = data.get("topic", "").strip()
+
+    if not topic:
+        return jsonify({"error": "Tema vazio"}), 400
+
+    start = time.time()
+
+    context, sources = get_context_for_topic(topic, top_k=4)
+    if not context:
+        return jsonify({
+            "error": "Nao encontrei conteudo sobre esse tema nos livros.",
+            "questions": []
+        })
+
+    system_prompt = QUIZ_PROMPT + context[:2000]
+    messages = [{"role": "user", "content": "Gere 5 questoes de multipla escolha sobre: " + topic}]
+
+    response = api_manager.generate(system_prompt, messages)
+
+    questions = parse_json_response(response["text"])
+    if questions is None:
+        questions = []
+
+    elapsed = time.time() - start
+
+    return jsonify({
+        "questions": questions,
+        "sources": sources,
+        "time": round(elapsed, 2),
+        "provider": response["provider"]
+    })
+
+
+@app.route("/api/topics")
+def topics():
+    """Retorna lista de topicos disponiveis baseado nos livros."""
+    if not knowledge_base or not knowledge_base["chunks"]:
+        return jsonify({"topics": []})
+
+    topic_counts = Counter()
+    for chunk in knowledge_base["chunks"]:
+        book = chunk.get("book", "")
+        if book:
+            topic_counts[book] += 1
+
+    books_info = []
+    for book, count in topic_counts.most_common():
+        books_info.append({"name": book, "chunks": count})
+
+    return jsonify({"books": books_info, "total_chunks": knowledge_base.get("total_chunks", 0)})
 
 
 @app.route("/api/status")
