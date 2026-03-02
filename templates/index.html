@@ -162,6 +162,34 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);touc
 .clear-history-btn{padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;margin-top:8px}
 .clear-history-btn:hover{border-color:var(--red);color:var(--red)}
 
+/* ===== MINDMAP ===== */
+.mindmap-wrapper{flex:1;overflow:auto;padding:0 12px 20px;-webkit-overflow-scrolling:touch}
+.mindmap-canvas{position:relative;margin:0 auto}
+
+.mm-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10;text-align:center}
+.mm-center-inner{padding:18px 30px;border-radius:24px;background:linear-gradient(135deg,#0a2a2a,#0d1f2d);border:2px solid var(--accent);font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--accent);box-shadow:0 0 40px rgba(0,229,200,.25),0 0 80px rgba(0,229,200,.08),inset 0 1px 0 rgba(255,255,255,.05);animation:mmPulse 3s ease-in-out infinite;max-width:220px;word-wrap:break-word}
+@keyframes mmPulse{0%,100%{box-shadow:0 0 40px rgba(0,229,200,.25),0 0 80px rgba(0,229,200,.08)}50%{box-shadow:0 0 50px rgba(0,229,200,.35),0 0 100px rgba(0,229,200,.12)}}
+
+.mm-branch{position:absolute;z-index:5;animation:mmBranchIn .6s ease backwards}
+@keyframes mmBranchIn{from{opacity:0;transform:translate(var(--tx),var(--ty)) scale(.7)}to{opacity:1;transform:translate(var(--tx),var(--ty)) scale(1)}}
+
+.mm-branch-title{padding:10px 18px;border-radius:14px;font-size:13px;font-weight:600;text-align:center;cursor:default;position:relative;overflow:hidden;letter-spacing:.3px;transition:transform .2s}
+.mm-branch-title:hover{transform:scale(1.05)}
+.mm-branch-title::before{content:'';position:absolute;inset:0;border-radius:14px;opacity:.08;background:radial-gradient(circle at 30% 30%,#fff,transparent)}
+
+.mm-items{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.mm-item{padding:7px 12px;border-radius:10px;font-size:11.5px;background:rgba(13,21,32,.85);backdrop-filter:blur(8px);border:1px solid;color:var(--text);line-height:1.45;max-width:185px;word-wrap:break-word;transition:transform .15s,border-color .2s;cursor:default}
+.mm-item:hover{transform:translateX(3px)}
+
+.mm-svg-lines{position:absolute;left:0;top:0;z-index:1;pointer-events:none}
+
+.mm-sources{text-align:center;padding:12px;font-size:11px;color:var(--text-dim);margin-top:8px}
+.mm-actions{display:flex;gap:8px;justify-content:center;margin-top:12px;padding-bottom:12px}
+
+/* Glow dots on lines */
+.mm-dot{animation:mmDotMove 2s linear infinite}
+@keyframes mmDotMove{0%{offset-distance:0%}100%{offset-distance:100%}}
+
 .books-list{display:flex;flex-direction:column;gap:8px}
 .book-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border)}
 .book-name{font-size:13px;flex:1}
@@ -244,6 +272,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);touc
     <button class="tab active" onclick="switchTab('chat')"><span class="tab-icon">💬</span>Chat</button>
     <button class="tab" onclick="switchTab('flashcards')"><span class="tab-icon">🃏</span>Flashcards</button>
     <button class="tab" onclick="switchTab('quiz')"><span class="tab-icon">📝</span>Quiz</button>
+    <button class="tab" onclick="switchTab('mindmap')"><span class="tab-icon">🧠</span>Mapa Mental</button>
     <button class="tab" onclick="switchTab('org')"><span class="tab-icon">📊</span>Meu Estudo</button>
   </div>
 
@@ -305,6 +334,22 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);touc
       <div class="empty-state">
         <div class="empty-state-icon">📝</div>
         <div class="empty-state-text">Digite um tema e clique em Gerar Quiz<br>para testar seus conhecimentos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MAPA MENTAL PANEL ===== -->
+  <div class="panel" id="panel-mindmap">
+    <div class="study-input-area">
+      <div class="study-input-row">
+        <input class="study-input" id="mindmapTopic" placeholder="Tema: ex. sistema respiratorio, sinapse..." onkeydown="if(event.key==='Enter')generateMindmap()">
+        <button class="study-btn" id="mindmapBtn" onclick="generateMindmap()">Gerar Mapa</button>
+      </div>
+    </div>
+    <div class="mindmap-wrapper" id="mindmapContainer">
+      <div class="empty-state">
+        <div class="empty-state-icon">🧠</div>
+        <div class="empty-state-text">Digite um tema e clique em Gerar Mapa<br>para visualizar os conceitos conectados</div>
       </div>
     </div>
   </div>
@@ -854,8 +899,8 @@ function refreshOrg() {
     return;
   }
   histList.innerHTML = studyHistory.slice(0, 20).map(h => {
-    let typeClass = h.type === 'chat' ? 'chat' : h.type === 'flash' ? 'flash' : 'quiz';
-    let typeLabel = h.type === 'chat' ? 'Chat' : h.type === 'flash' ? 'Flash' : 'Quiz';
+    let typeClass = h.type === 'chat' ? 'chat' : h.type === 'flash' ? 'flash' : h.type === 'mindmap' ? 'flash' : 'quiz';
+    let typeLabel = h.type === 'chat' ? 'Chat' : h.type === 'flash' ? 'Flash' : h.type === 'mindmap' ? 'Mapa' : 'Quiz';
     let scoreHtml = h.score ? '<span class="history-score" style="color:var(--accent)">' + h.score + '</span>' : '';
     return '<div class="history-item">'
       + '<span class="history-topic">' + escapeHtml(h.topic.substring(0,40)) + (h.topic.length > 40 ? '...' : '') + '</span>'
@@ -898,6 +943,149 @@ function toggleProviders() {
 function eli5(originalQuestion) {
   document.getElementById('chatInput').value = 'Explique de forma BEM simples, como se eu tivesse 5 anos de idade, usando analogias do dia a dia e linguagem facil: ' + originalQuestion;
   sendMessage();
+}
+
+// ===== MAPA MENTAL =====
+async function generateMindmap() {
+  const topic = document.getElementById('mindmapTopic').value.trim();
+  if (!topic) return;
+
+  const btn = document.getElementById('mindmapBtn');
+  const container = document.getElementById('mindmapContainer');
+  btn.disabled = true;
+  btn.textContent = 'Gerando...';
+  container.innerHTML = '<div style="text-align:center;padding:40px"><div class="loading-spinner"></div> Gerando mapa mental sobre "' + escapeHtml(topic) + '"...</div>';
+
+  try {
+    const resp = await fetch('/api/mindmap', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({topic: topic})
+    });
+    const data = await resp.json();
+
+    if (data.mindmap && data.mindmap.centro && data.mindmap.ramos) {
+      renderMindmap(data.mindmap, data.sources, data.provider, data.time);
+      addHistory('mindmap', topic);
+    } else {
+      container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Nao foi possivel gerar o mapa mental. Tente outro tema.</div></div>';
+    }
+  } catch(err) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Erro de conexao.</div></div>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Gerar Mapa';
+}
+
+function renderMindmap(mm, sources, provider, time) {
+  const container = document.getElementById('mindmapContainer');
+  const ramos = mm.ramos || [];
+  const numRamos = ramos.length;
+  if (!numRamos) { container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Nao foi possivel gerar o mapa.</div></div>'; return; }
+
+  // Layout calculations
+  const canvasW = Math.max(750, numRamos * 210);
+  const canvasH = Math.max(550, numRamos * 130);
+  const cx = canvasW / 2;
+  const cy = canvasH / 2;
+  const radius = Math.min(canvasW, canvasH) * 0.33;
+
+  // SVG with curved lines + glow
+  let svgDefs = '<defs>';
+  ramos.forEach((r, i) => {
+    const cor = r.cor || '#00e5c8';
+    svgDefs += '<linearGradient id="grad'+i+'" x1="0%" y1="0%" x2="100%" y2="0%">'
+      + '<stop offset="0%" stop-color="'+cor+'" stop-opacity="0.6"/>'
+      + '<stop offset="100%" stop-color="'+cor+'" stop-opacity="0.15"/>'
+      + '</linearGradient>';
+    svgDefs += '<filter id="glow'+i+'"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  });
+  svgDefs += '</defs>';
+
+  let svgPaths = '';
+  let branchesHtml = '';
+
+  ramos.forEach((ramo, i) => {
+    const cor = ramo.cor || '#00e5c8';
+    const angle = (i / numRamos) * 2 * Math.PI - Math.PI / 2;
+    const bx = cx + radius * Math.cos(angle);
+    const by = cy + radius * Math.sin(angle);
+
+    // Curved bezier line from center to branch
+    const midX = (cx + bx) / 2;
+    const midY = (cy + by) / 2;
+    // Offset control point perpendicular to line
+    const dx = bx - cx;
+    const dy = by - cy;
+    const len = Math.sqrt(dx*dx + dy*dy) || 1;
+    const perpX = -dy / len * 30;
+    const perpY = dx / len * 30;
+    const cpx = midX + perpX;
+    const cpy = midY + perpY;
+
+    svgPaths += '<path d="M'+cx+','+cy+' Q'+cpx+','+cpy+' '+bx+','+by+'" fill="none" stroke="url(#grad'+i+')" stroke-width="2.5" filter="url(#glow'+i+')" stroke-linecap="round">';
+    svgPaths += '<animate attributeName="stroke-dasharray" from="0,1000" to="1000,0" dur="1.2s" fill="freeze" begin="'+(i*0.15)+'s"/>';
+    svgPaths += '</path>';
+
+    // Small circle at branch endpoint
+    svgPaths += '<circle cx="'+bx+'" cy="'+by+'" r="4" fill="'+cor+'" opacity="0.6"><animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite" begin="'+(i*0.2)+'s"/></circle>';
+
+    // Items
+    const itemsHtml = (ramo.itens || []).map(item =>
+      '<div class="mm-item" style="border-color:'+cor+'33;border-left:3px solid '+cor+'66">' + escapeHtml(item) + '</div>'
+    ).join('');
+
+    // Position branch: left or right of center
+    const isLeft = bx < cx;
+    const txVal = isLeft ? '-100%' : '0%';
+    const itemAlign = isLeft ? 'align-items:flex-end' : 'align-items:flex-start';
+    const titleAlign = isLeft ? 'margin-left:auto' : 'margin-right:auto';
+    const delay = (i * 0.1 + 0.3);
+
+    branchesHtml += '<div class="mm-branch" style="left:'+bx+'px;top:'+by+'px;--tx:'+txVal+';--ty:-50%;transform:translate('+txVal+',-50%);animation-delay:'+delay+'s">'
+      + '<div class="mm-branch-title" style="background:'+cor+'18;border:1.5px solid '+cor+'55;color:'+cor+';'+titleAlign+'">' + escapeHtml(ramo.titulo || '') + '</div>'
+      + '<div class="mm-items" style="'+itemAlign+'">' + itemsHtml + '</div>'
+      + '</div>';
+  });
+
+  const svg = '<svg class="mm-svg-lines" width="'+canvasW+'" height="'+canvasH+'">' + svgDefs + svgPaths + '</svg>';
+
+  // Sources
+  let sourcesHtml = '';
+  if (sources && sources.length) {
+    sourcesHtml = '<div class="mm-sources">Fontes: ' + sources.map(s => escapeHtml(s.book) + (s.page ? ', p.'+s.page : '')).join(' | ') + ' &middot; ' + (provider||'') + ' &middot; ' + (time||0) + 's</div>';
+  }
+
+  // Audio text
+  const audioText = mm.centro + '. ' + ramos.map(r => r.titulo + ': ' + (r.itens||[]).join(', ')).join('. ');
+
+  container.innerHTML = '<div class="mindmap-canvas" style="width:'+canvasW+'px;height:'+canvasH+'px;min-width:'+canvasW+'px">'
+    + svg
+    + '<div class="mm-center"><div class="mm-center-inner">' + escapeHtml(mm.centro) + '</div></div>'
+    + branchesHtml
+    + '</div>'
+    + sourcesHtml
+    + '<div class="mm-actions">'
+    + '<button class="msg-btn" onclick="exportMindmapImage()">📸 Salvar Imagem</button>'
+    + '<button class="msg-btn" onclick="toggleTTS(this,null,\'' + escapeJs(audioText) + '\')">🔊 Ouvir</button>'
+    + '</div>';
+}
+
+function exportMindmapImage() {
+  const canvas = document.querySelector('.mindmap-canvas');
+  if (!canvas) return;
+  // Usa html2canvas se disponivel, senao informa
+  if (typeof html2canvas !== 'undefined') {
+    html2canvas(canvas, {backgroundColor: '#060b14'}).then(c => {
+      const a = document.createElement('a');
+      a.href = c.toDataURL('image/png');
+      a.download = 'medicrg-mapa-mental.png';
+      a.click();
+    });
+  } else {
+    alert('Para salvar como imagem, faca um print da tela (tecla Print Screen ou Win+Shift+S)');
+  }
 }
 
 // ===== UTILS =====

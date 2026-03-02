@@ -81,6 +81,47 @@ REGRAS:
 CONTEXTO DOS LIVROS:
 """
 
+MINDMAP_PROMPT = """Com base EXCLUSIVAMENTE no contexto dos livros fornecido abaixo, gere um mapa mental sobre o tema solicitado.
+
+FORMATO OBRIGATORIO (responda APENAS com este JSON, sem texto antes ou depois):
+{
+  "centro": "tema principal",
+  "ramos": [
+    {
+      "titulo": "subtema 1",
+      "cor": "#00e5c8",
+      "itens": ["conceito A", "conceito B", "conceito C"]
+    },
+    {
+      "titulo": "subtema 2",
+      "cor": "#a78bfa",
+      "itens": ["conceito D", "conceito E"]
+    },
+    {
+      "titulo": "subtema 3",
+      "cor": "#ff6b9d",
+      "itens": ["conceito F", "conceito G", "conceito H"]
+    },
+    {
+      "titulo": "subtema 4",
+      "cor": "#60a5fa",
+      "itens": ["conceito I", "conceito J"]
+    }
+  ],
+  "livros": ["livro 1, p.X", "livro 2, p.Y"]
+}
+
+REGRAS:
+- Gere entre 3 e 6 ramos principais
+- Cada ramo deve ter entre 2 e 5 itens
+- Use cores variadas: #00e5c8, #a78bfa, #ff6b9d, #60a5fa, #fbbf24, #34d399
+- Organize hierarquicamente do geral pro especifico
+- Use APENAS informacoes presentes no contexto
+- Responda em portugues brasileiro
+
+CONTEXTO DOS LIVROS:
+"""
+
 
 def load_knowledge_base():
     global knowledge_base
@@ -386,6 +427,40 @@ def quiz():
 
     return jsonify({
         "questions": questions,
+        "sources": sources,
+        "time": round(elapsed, 2),
+        "provider": response["provider"]
+    })
+
+
+@app.route("/api/mindmap", methods=["POST"])
+def mindmap():
+    data = request.json
+    topic = data.get("topic", "").strip()
+
+    if not topic:
+        return jsonify({"error": "Tema vazio"}), 400
+
+    start = time.time()
+
+    context, sources = get_context_for_topic(topic, top_k=4)
+    if not context:
+        return jsonify({
+            "error": "Nao encontrei conteudo sobre esse tema nos livros.",
+            "mindmap": None
+        })
+
+    system_prompt = MINDMAP_PROMPT + context[:2000]
+    messages = [{"role": "user", "content": "Gere um mapa mental sobre: " + topic}]
+
+    response = api_manager.generate(system_prompt, messages)
+
+    mindmap_data = parse_json_response(response["text"])
+
+    elapsed = time.time() - start
+
+    return jsonify({
+        "mindmap": mindmap_data,
         "sources": sources,
         "time": round(elapsed, 2),
         "provider": response["provider"]
