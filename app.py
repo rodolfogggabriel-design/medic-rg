@@ -46,15 +46,49 @@ CONTEXTO DOS LIVROS:
 """
 
 FLASHCARD_PROMPT = """Com base EXCLUSIVAMENTE no contexto dos livros fornecido abaixo, gere exatamente 5 flashcards sobre o tema solicitado.
-FORMATO OBRIGATORIO (responda APENAS com este JSON, sem texto antes ou depois):
-[{"frente":"pergunta","verso":"resposta","livro":"nome","pagina":"num"}]
-Responda em portugues brasileiro. CONTEXTO:
+
+FORMATO OBRIGATORIO - responda APENAS com este JSON, sem texto antes ou depois, sem markdown:
+[
+  {"frente": "pergunta clara e objetiva", "verso": "resposta concisa baseada nos livros", "livro": "nome do livro", "pagina": "numero"},
+  {"frente": "pergunta 2", "verso": "resposta 2", "livro": "nome", "pagina": "numero"},
+  {"frente": "pergunta 3", "verso": "resposta 3", "livro": "nome", "pagina": "numero"},
+  {"frente": "pergunta 4", "verso": "resposta 4", "livro": "nome", "pagina": "numero"},
+  {"frente": "pergunta 5", "verso": "resposta 5", "livro": "nome", "pagina": "numero"}
+]
+
+REGRAS:
+- Gere exatamente 5 flashcards, nem mais nem menos
+- Use APENAS informacoes presentes no contexto
+- Responda em portugues brasileiro
+- NAO inclua texto antes ou depois do JSON
+- NAO use markdown ou code blocks
+
+CONTEXTO DOS LIVROS:
 """
 
 QUIZ_PROMPT = """Com base EXCLUSIVAMENTE no contexto dos livros fornecido abaixo, gere exatamente 5 questoes de multipla escolha sobre o tema solicitado.
-FORMATO OBRIGATORIO (responda APENAS com este JSON, sem texto antes ou depois):
-[{"pergunta":"texto","alternativas":["a) ...","b) ...","c) ...","d) ..."],"correta":0,"explicacao":"explicacao citando livro","livro":"nome","pagina":"num"}]
-Responda em portugues brasileiro. CONTEXTO:
+
+FORMATO OBRIGATORIO - responda APENAS com este JSON, sem texto antes ou depois, sem markdown:
+[
+  {
+    "pergunta": "texto da pergunta",
+    "alternativas": ["a) opcao 1", "b) opcao 2", "c) opcao 3", "d) opcao 4"],
+    "correta": 0,
+    "explicacao": "explicacao da resposta correta citando o livro",
+    "livro": "nome do livro",
+    "pagina": "numero"
+  }
+]
+
+REGRAS:
+- Gere exatamente 5 questoes, nem mais nem menos
+- Cada questao deve ter 4 alternativas (a, b, c, d)
+- "correta" e o indice da alternativa correta (0=a, 1=b, 2=c, 3=d)
+- Use APENAS informacoes presentes no contexto
+- Responda em portugues brasileiro
+- NAO inclua texto antes ou depois do JSON
+
+CONTEXTO DOS LIVROS:
 """
 
 MINDMAP_PROMPT = """Com base EXCLUSIVAMENTE no contexto dos livros, gere um mapa mental sobre o tema solicitado.
@@ -209,20 +243,51 @@ def get_context_for_topic(topic, top_k=4, chunks=None):
 
 
 def parse_json_response(text):
+    if not text:
+        return None
     text = text.strip()
-    text = re.sub(r'^```json\s*', '', text)
-    text = re.sub(r'^```\s*', '', text)
-    text = re.sub(r'\s*```$', '', text)
+    # Remove markdown code blocks
+    text = re.sub(r'^```json\s*\n?', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^```\s*\n?', '', text, flags=re.MULTILINE)
+    text = re.sub(r'\n?\s*```\s*$', '', text, flags=re.MULTILINE)
     text = text.strip()
+    # Try direct parse
     try:
         return json.loads(text)
     except:
-        match = re.search(r'[\[{].*[\]}]', text, re.DOTALL)
-        if match:
+        pass
+    # Try to find JSON array
+    match = re.search(r'\[[\s\S]*\]', text)
+    if match:
+        try:
+            return json.loads(match.group())
+        except:
+            # Try fixing common issues: trailing commas
+            fixed = re.sub(r',\s*([}\]])', r'\1', match.group())
             try:
-                return json.loads(match.group())
+                return json.loads(fixed)
             except:
                 pass
+    # Try to find JSON object
+    match = re.search(r'\{[\s\S]*\}', text)
+    if match:
+        try:
+            return json.loads(match.group())
+        except:
+            fixed = re.sub(r',\s*([}\]])', r'\1', match.group())
+            try:
+                return json.loads(fixed)
+            except:
+                pass
+    # Last resort: try to find multiple JSON objects and wrap in array
+    objects = re.findall(r'\{[^{}]+\}', text)
+    if objects:
+        try:
+            parsed = [json.loads(o) for o in objects]
+            return parsed
+        except:
+            pass
+    print("PARSE FAILED for text: " + text[:200])
     return None
 
 
@@ -352,8 +417,16 @@ def flashcards():
     if not context:
         return jsonify({"error": "Tema nao encontrado.", "cards": []})
     system_prompt = FLASHCARD_PROMPT + context[:2000]
-    response = api_manager.generate(system_prompt, [{"role": "user", "content": "Gere 5 flashcards sobre: " + topic}])
-    cards = parse_json_response(response["text"]) or []
+    response = api_manager.generate(system_prompt, [{"role": "user", "content": "Gere exatamente 5 flashcards sobre: " + topic + "\n\nResponda APENAS com o JSON, sem texto adicional."}])
+    raw = response["text"]
+    cards = parse_json_response(raw)
+    if cards is None:
+        print("FLASHCARD RAW RESPONSE: " + raw[:500])
+        cards = []
+    if isinstance(cards, dict):
+        cards = cards.get("flashcards", cards.get("cards", [cards]))
+    if not isinstance(cards, list):
+        cards = []
     return jsonify({"cards": cards, "sources": sources, "time": round(time.time()-start, 2), "provider": response["provider"]})
 
 
@@ -368,8 +441,16 @@ def quiz():
     if not context:
         return jsonify({"error": "Tema nao encontrado.", "questions": []})
     system_prompt = QUIZ_PROMPT + context[:2000]
-    response = api_manager.generate(system_prompt, [{"role": "user", "content": "Gere 5 questoes sobre: " + topic}])
-    questions = parse_json_response(response["text"]) or []
+    response = api_manager.generate(system_prompt, [{"role": "user", "content": "Gere exatamente 5 questoes de multipla escolha sobre: " + topic + "\n\nResponda APENAS com o JSON, sem texto adicional."}])
+    raw = response["text"]
+    questions = parse_json_response(raw)
+    if questions is None:
+        print("QUIZ RAW RESPONSE: " + raw[:500])
+        questions = []
+    if isinstance(questions, dict):
+        questions = questions.get("questions", questions.get("questoes", [questions]))
+    if not isinstance(questions, list):
+        questions = []
     return jsonify({"questions": questions, "sources": sources, "time": round(time.time()-start, 2), "provider": response["provider"]})
 
 

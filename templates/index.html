@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#060b14">
+<meta name="format-detection" content="telephone=no">
 <title>MEDIC.RG</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -311,15 +314,143 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);touc
 .signature{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text-dim);opacity:.3;z-index:0;pointer-events:none}
 
 /* ===== RESPONSIVE ===== */
+/* Mobile detection class added by JS */
+body.is-mobile .orb{filter:blur(60px);opacity:.08}
+body.is-mobile .bg-orbs .orb-3{display:none}
+
 @media(max-width:600px){
-  .tabs{padding:8px 10px;gap:3px}
+  .app{max-width:100%}
+
+  /* Header compact */
+  .header{padding:8px 12px 0}
+  .logo-icon{width:28px;height:28px;font-size:14px}
+  .logo-text{font-size:20px}
+  .hdr-btn{padding:5px 8px;font-size:11px}
+  .user-badge{padding:5px 8px;font-size:11px}
+
+  /* Tabs scrollable */
+  .tabs{padding:8px 8px;gap:3px}
   .tab{padding:6px 10px;font-size:11px}
-  .flash-card{width:100%;height:160px}
-  .header{padding:10px 12px 0}
-  .match-container{flex-direction:column;align-items:center}
-  .saved-panel{width:100%}
+  .tab-icon{margin-right:2px;font-size:12px}
+
+  /* Chat */
+  .chat-messages{padding:8px 10px}
+  .msg-user .msg-bubble{max-width:88%;padding:8px 12px;font-size:13px}
+  .msg-ai .msg-bubble{max-width:95%;padding:10px 14px}
+  .msg-ai .msg-text{font-size:13px;line-height:1.6}
+  .msg-btn{padding:3px 8px;font-size:10px}
+  .chat-input-area{padding:8px 10px}
+  .chat-input-row input{padding:10px 12px;font-size:13px}
+  .send-btn{padding:10px 16px;font-size:13px}
+  .eli5-btn{font-size:10px;padding:4px 10px}
+
+  /* Study inputs */
+  .study-input-area{padding:8px 10px}
+  .study-input{padding:8px 12px;font-size:13px}
+  .study-btn{padding:8px 14px;font-size:12px}
+
+  /* Options row */
+  .opts-row{padding:0 10px 6px;gap:4px}
+  .opt-chip{padding:3px 8px;font-size:10px}
+  .opt-label{font-size:10px}
+
+  /* Flashcards */
+  .flash-container{padding:8px 10px;gap:8px}
+  .flash-card{width:100%;height:150px}
+  .flash-front{font-size:13px;padding:12px}
+  .flash-back{font-size:11px;padding:12px}
+
+  /* Quiz */
+  .quiz-container{padding:8px 10px}
+  .q-card{padding:12px}
+  .q-text{font-size:13px}
+  .q-opt{padding:8px 12px;font-size:12px}
+  .q-explain{font-size:11px}
+
+  /* Exam */
+  .exam-timer{padding:8px 10px}
+  .timer-display{font-size:16px}
+
+  /* Match */
+  .match-container{flex-direction:column;align-items:center;gap:12px}
+  .match-col{min-width:auto;width:100%}
+  .match-item{padding:8px 10px;font-size:11px}
+
+  /* Order */
+  .order-list{max-width:100%}
+  .order-item{padding:8px 10px;font-size:12px}
+
+  /* Mindmap */
+  .mindmap-wrapper{padding:0 6px 12px}
+  .mm-center-inner{font-size:14px;padding:12px 20px;max-width:160px}
+  .mm-branch-title{font-size:11px;padding:7px 12px}
+  .mm-item{font-size:10px;padding:5px 8px;max-width:140px}
+  .mm-zoom-controls{gap:2px}
+  .mm-zoom-btn{width:28px;height:28px;font-size:14px}
+
+  /* Guide */
+  .guide-container{padding:8px 10px}
+  .guide-section{padding:12px}
+  .guide-title{font-size:16px}
+  .guide-text{font-size:12px}
+  .guide-term{padding:4px 8px}
+
+  /* Upload */
+  .upload-area{padding:10px}
+  .upload-box{padding:24px 16px}
+  .upload-icon{font-size:30px}
+
+  /* Profile */
+  .profile-container{padding:8px 10px}
+  .profile-header{padding:16px}
+  .profile-avatar{width:48px;height:48px;font-size:20px}
+  .progress-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .progress-num{font-size:20px}
+
+  /* Saved panel fullscreen */
+  .saved-panel{width:100%;right:-100%}
+
+  /* Stats */
   .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .stat-num{font-size:22px}
+
+  /* Modal */
+  .modal{padding:24px;width:95%}
+
+  /* Tooltips */
+  .mm-item-tooltip{max-width:240px;padding:10px 12px;font-size:11px}
+  .saiba-mais{padding:6px 10px;flex-wrap:wrap}
+  .sugestao-chat{font-size:10px;padding:5px 10px}
+
+  /* Source pills smaller */
+  .source-pill{padding:2px 6px;font-size:9px}
+  .msg-sources{gap:4px}
 }
+
+/* Extra small phones */
+@media(max-width:380px){
+  .tabs{gap:2px}
+  .tab{padding:5px 8px;font-size:10px}
+  .tab-icon{display:none}
+  .logo-text{font-size:18px}
+  .hdr-btn{padding:4px 6px;font-size:10px}
+  .flash-card{height:140px}
+  .q-opt{padding:7px 10px;font-size:11px}
+  .mm-center-inner{font-size:12px;padding:10px 16px;max-width:130px}
+}
+
+/* Tablet */
+@media(min-width:601px) and (max-width:900px){
+  .flash-card{width:calc(50% - 6px)}
+  .stats-grid{grid-template-columns:repeat(3,1fr)}
+}
+
+/* Desktop enhancements */
+@media(min-width:901px){
+  .app{border-left:1px solid var(--border);border-right:1px solid var(--border)}
+  .q-opt:hover{transform:translateX(4px)}
+}
+
 </style>
 </head>
 <body data-theme="dark">
@@ -510,6 +641,47 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);touc
 <div class="signature">Rodolfo Gabriel</div>
 
 <script>
+// =============================================
+// DEVICE DETECTION
+// =============================================
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 600;
+const isTablet = /iPad|Android/i.test(navigator.userAgent) && window.innerWidth > 600 && window.innerWidth <= 1024;
+const deviceType = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
+
+if (isMobile) document.body.classList.add('is-mobile');
+if (isTablet) document.body.classList.add('is-tablet');
+document.body.dataset.device = deviceType;
+
+// Adjust mindmap radius for mobile
+const mmRadiusFactor = isMobile ? 0.28 : 0.33;
+const mmCanvasMultW = isMobile ? 180 : 210;
+const mmCanvasMultH = isMobile ? 110 : 130;
+const mmCanvasMinW = isMobile ? 500 : 750;
+const mmCanvasMinH = isMobile ? 400 : 550;
+
+// Disable heavy animations on mobile for performance
+if (isMobile) {
+  document.documentElement.style.setProperty('--orb-opacity', '.06');
+}
+
+// Prevent zoom on double tap (iOS)
+let lastTap = 0;
+document.addEventListener('touchend', function(e) {
+  const now = Date.now();
+  if (now - lastTap < 300) { e.preventDefault(); }
+  lastTap = now;
+}, { passive: false });
+
+// Auto-resize textareas on mobile
+if (isMobile) {
+  document.addEventListener('input', function(e) {
+    if (e.target.tagName === 'TEXTAREA') {
+      e.target.style.height = 'auto';
+      e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px';
+    }
+  });
+}
+
 // =============================================
 // CONFIG & STATE
 // =============================================
@@ -800,7 +972,7 @@ async function generateFlashcards() {
     if (data.cards && data.cards.length) {
       container.innerHTML = data.cards.map((c,i) => '<div class="flash-card" onclick="this.classList.toggle(\'flipped\')"><div class="flash-inner"><div class="flash-front">' + escapeHtml(c.frente) + '</div><div class="flash-back">' + escapeHtml(c.verso) + '<div class="flash-source">' + escapeHtml(c.livro||'') + (c.pagina?', p.'+c.pagina:'') + '</div></div></div></div>').join('');
       addHistory('flash', topic);
-    } else { container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Nao foi possivel gerar flashcards</div></div>'; }
+    } else { container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div class="empty-state-text">Nao foi possivel gerar flashcards. Tente outro tema ou clique Gerar novamente.</div></div>'; }
   } catch(e) { container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Erro de conexao</div></div>'; }
   btn.disabled = false; btn.textContent = 'Gerar';
 }
@@ -1095,7 +1267,7 @@ function renderMindmap(mm, sources) {
   const n = ramos.length;
   if (!n) return;
   window.currentMindmapData = mm;
-  const cW = Math.max(750, n*210), cH = Math.max(550, n*130), cx = cW/2, cy = cH/2, rad = Math.min(cW,cH)*.33;
+  const cW = Math.max(mmCanvasMinW, n*mmCanvasMultW), cH = Math.max(mmCanvasMinH, n*mmCanvasMultH), cx = cW/2, cy = cH/2, rad = Math.min(cW,cH)*mmRadiusFactor;
 
   let defs = '<defs>';
   ramos.forEach((r,i) => { const c = r.cor||'#00e5c8'; defs += '<linearGradient id="g'+i+'"><stop offset="0%" stop-color="'+c+'" stop-opacity=".6"/><stop offset="100%" stop-color="'+c+'" stop-opacity=".15"/></linearGradient><filter id="gl'+i+'"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'; });
@@ -1310,6 +1482,35 @@ function renderProfile(progress) {
   html += '<button class="clear-history-btn" onclick="logoutUser();renderProfile([])">Sair da conta</button>';
   c.innerHTML = html;
 }
+
+// =============================================
+// MOBILE TOUCH IMPROVEMENTS
+// =============================================
+// Swipe right to close saved panel
+if (isMobile) {
+  let touchStartX = 0;
+  document.getElementById('savedPanel').addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.getElementById('savedPanel').addEventListener('touchmove', e => {
+    const diff = e.touches[0].clientX - touchStartX;
+    if (diff > 80) { toggleSaved(); }
+  }, { passive: true });
+}
+
+// Scroll active tab into view
+function scrollTabIntoView() {
+  const active = document.querySelector('.tab.active');
+  if (active && isMobile) { active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }
+}
+
+// Override switchTab to scroll on mobile
+const origSwitchTab = switchTab;
+switchTab = function(tab) {
+  origSwitchTab(tab);
+  setTimeout(scrollTabIntoView, 100);
+};
+
+// Show device type in console for debugging
+console.log('MEDIC.RG | Dispositivo: ' + deviceType + ' | Largura: ' + window.innerWidth + 'px');
 
 // =============================================
 // INIT THEME BUTTON
